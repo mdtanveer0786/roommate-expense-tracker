@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Manage Presence - Roommate Expenses</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
+    <style>
+        .presence-card {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+        }
+
+        .presence-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .presence-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .presence-member {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .member-avatar-medium {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .member-name {
+            font-weight: 600;
+        }
+
+        .presence-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius-full);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .presence-status.present {
+            background: var(--success-100);
+            color: var(--success-700);
+        }
+
+        .presence-status.absent {
+            background: var(--warning-100);
+            color: var(--warning-700);
+        }
+
+        .absence-details {
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .absence-period {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .absence-reason {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+
+        .calendar-view {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.25rem;
+            margin: 1rem 0;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .calendar-day.present {
+            background: var(--success-100);
+            color: var(--success-700);
+        }
+
+        .calendar-day.absent {
+            background: var(--warning-100);
+            color: var(--warning-700);
+        }
+
+        .calendar-day.today {
+            border: 2px solid var(--primary-600);
+        }
+
+        .calendar-day:hover {
+            transform: scale(1.1);
+        }
+
+        .calendar-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.25rem;
+            margin-bottom: 0.5rem;
+            text-align: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+
+        .empty-state-message {
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .date-range-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-main">
+                <a href="index.html" class="icon-btn back-button">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="15 18 9 12 15 6" />
+                    </svg>
+                </a>
+                <div class="header-title">
+                    <h1>Manage Presence</h1>
+                </div>
+                <div class="header-actions">
+                    <button class="icon-btn" id="addAbsenceBtn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19" />
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="month-navigation">
+                <button class="nav-btn" id="prevMonthPresenceBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="15 18 9 12 15 6" />
+                    </svg>
+                </button>
+                <div class="month-display">
+                    <span id="presenceMonthName">Loading...</span>
+                </div>
+                <button class="nav-btn" id="nextMonthPresenceBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Info Message -->
+            <section class="section">
+                <div class="info-message">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="16" x2="12" y2="12" />
+                        <line x1="12" y1="8" x2="12.01" y2="8" />
+                    </svg>
+                    <span>Mark roommates as absent to exclude them from expense splits. Absences are automatically
+                        applied based on expense dates.</span>
+                </div>
+            </section>
+
+            <!-- Presence List -->
+            <section class="section">
+                <div class="section-header">
+                    <h2>Roommate Presence</h2>
+                    <span class="badge" id="absenceCount">0</span>
+                </div>
+                <div id="presenceList">
+                    <!-- Presence cards will be loaded here -->
+                </div>
+            </section>
+
+            <!-- Calendar View -->
+            <section class="section">
+                <h2>Monthly Calendar</h2>
+                <div id="calendarContainer">
+                    <!-- Calendar will be loaded here -->
+                </div>
+            </section>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <a href="index.html" class="nav-item">
+                <svg class="nav-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                    <polyline points="9 22 9 12 15 12 15 22" />
+                </svg>
+                <span class="nav-label">Home</span>
+            </a>
+            <a href="add-expense.html" class="nav-item">
+                <svg class="nav-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                <span class="nav-label">Add</span>
+            </a>
+            <a href="summary.html" class="nav-item">
+                <svg class="nav-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
+                    <path d="M22 12A10 10 0 0 0 12 2v10z" />
+                </svg>
+                <span class="nav-label">Reports</span>
+            </a>
+            <a href="settings.html" class="nav-item">
+                <svg class="nav-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <circle cx="12" cy="12" r="3" />
+                    <path
+                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                </svg>
+                <span class="nav-label">Settings</span>
+            </a>
+        </nav>
+
+        <!-- Toast Container -->
+        <div class="toast-container" id="toastContainer"></div>
+
+        <!-- Add/Edit Absence Modal -->
+        <div class="modal-overlay" id="modalOverlay" style="display: none;"></div>
+        <div class="modal" id="absenceModal" style="display: none;">
+            <div class="modal-header">
+                <h3 id="absenceModalTitle">Mark Absence</h3>
+                <button class="icon-btn close-modal" data-modal="absenceModal">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="absenceForm">
+                    <div class="form-group">
+                        <label for="absenceMember" class="form-label">Roommate *</label>
+                        <select id="absenceMember" class="form-control" required>
+                            <!-- Options will be populated by JavaScript -->
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Absence Period *</label>
+                        <div class="date-range-inputs">
+                            <div>
+                                <label for="absenceStartDate" class="form-label">Start Date</label>
+                                <input type="date" id="absenceStartDate" class="form-control" required>
+                            </div>
+                            <div>
+                                <label for="absenceEndDate" class="form-label">End Date</label>
+                                <input type="date" id="absenceEndDate" class="form-control">
+                                <div class="form-hint">Leave empty for single day</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="absenceReason" class="form-label">Reason *</label>
+                        <select id="absenceReason" class="form-control" required>
+                            <option value="">Select a reason</option>
+                            <option value="Out of station">Out of station</option>
+                            <option value="Sick">Sick</option>
+                            <option value="Personal work">Personal work</option>
+                            <option value="Vacation">Vacation</option>
+                            <option value="Family event">Family event</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="customReasonContainer" style="display: none;">
+                        <label for="customReason" class="form-label">Custom Reason *</label>
+                        <input type="text" id="customReason" class="form-control" placeholder="Specify reason">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            <input type="checkbox" id="applyToFuture">
+                            Apply similar pattern to future months
+                        </label>
+                    </div>
+
+                    <input type="hidden" id="absenceId">
+
+                    <div class="modal-actions">
+                        <button type="button" class="btn secondary-btn" data-modal="absenceModal">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn primary-btn" id="saveAbsenceBtn">
+                            Save Absence
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Delete Confirmation Modal -->
+        <div class="modal" id="deleteAbsenceModal" style="display: none;">
+            <div class="modal-header">
+                <h3>Delete Absence</h3>
+                <button class="icon-btn close-modal" data-modal="deleteAbsenceModal">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="warning-message">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path
+                            d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                        <line x1="12" y1="9" x2="12" y2="13" />
+                        <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                    <p id="deleteAbsenceMessage">Are you sure you want to delete this absence record?</p>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn secondary-btn" data-modal="deleteAbsenceModal">
+                        Cancel
+                    </button>
+                    <button type="button" class="btn danger-btn" id="confirmDeleteAbsenceBtn">
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            initPresencePage();
+        });
+
+        let currentAbsenceId = null;
+        let currentPresenceMonth = getCurrentMonthKey();
+
+        function initPresencePage() {
+            // Load presence data
+            loadPresenceData();
+
+            // Setup month navigation
+            setupMonthNavigation();
+
+            // Setup add absence button
+            const addBtn = document.getElementById('addAbsenceBtn');
+            if (addBtn) {
+                addBtn.addEventListener('click', showAddAbsenceModal);
+            }
+
+            // Setup modal close buttons
+            document.querySelectorAll('.close-modal').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const modalId = this.getAttribute('data-modal');
+                    closeModal(modalId);
+                });
+            });
+
+            // Setup absence form submission
+            const absenceForm = document.getElementById('absenceForm');
+            if (absenceForm) {
+                absenceForm.addEventListener('submit', saveAbsence);
+            }
+
+            // Setup reason selector change
+            const reasonSelect = document.getElementById('absenceReason');
+            if (reasonSelect) {
+                reasonSelect.addEventListener('change', function () {
+                    const customContainer = document.getElementById('customReasonContainer');
+                    if (customContainer) {
+                        customContainer.style.display = this.value === 'Other' ? 'block' : 'none';
+                    }
+                });
+            }
+
+            // Setup modal overlay
+            const overlay = document.getElementById('modalOverlay');
+            if (overlay) {
+                overlay.addEventListener('click', function () {
+                    closeAllModals();
+                });
+            }
+
+            // Set today's date as default for start date
+            const today = new Date().toISOString().split('T')[0];
+            const startDateInput = document.getElementById('absenceStartDate');
+            if (startDateInput) {
+                startDateInput.value = today;
+                startDateInput.min = today; // Can't mark absence for past dates
+            }
+
+            const endDateInput = document.getElementById('absenceEndDate');
+            if (endDateInput) {
+                endDateInput.min = today;
+            }
+        }
+
+        function setupMonthNavigation() {
+            const prevBtn = document.getElementById('prevMonthPresenceBtn');
+            const nextBtn = document.getElementById('nextMonthPresenceBtn');
+
+            if (prevBtn) {
+                prevBtn.addEventListener('click', () => navigatePresenceMonth(-1));
+            }
+
+            if (nextBtn) {
+                nextBtn.addEventListener('click', () => navigatePresenceMonth(1));
+            }
+
+            updatePresenceMonthDisplay();
+        }
+
+        function navigatePresenceMonth(direction) {
+            const [year, month] = currentPresenceMonth.split('-').map(Number);
+            let newMonth = month + direction;
+            let newYear = year;
+
+            if (newMonth > 12) {
+                newMonth = 1;
+                newYear++;
+            } else if (newMonth < 1) {
+                newMonth = 12;
+                newYear--;
+            }
+
+            currentPresenceMonth = `${newYear}-${String(newMonth).padStart(2, '0')}`;
+            updatePresenceMonthDisplay();
+            loadPresenceData();
+        }
+
+        function updatePresenceMonthDisplay() {
+            const [year, month] = currentPresenceMonth.split('-').map(Number);
+            const monthNames = [
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+            const monthName = monthNames[month - 1];
+
+            const display = document.getElementById('presenceMonthName');
+            if (display) {
+                display.textContent = `${monthName} ${year}`;
+            }
+        }
+
+        function getCurrentMonthKey() {
+            const now = new Date();
+            return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        }
+
+        function loadPresenceData() {
+            const storage = window.storage;
+            if (!storage) {
+                showToast('Storage not available', 'error');
+                return;
+            }
+
+            const members = storage.getMembers();
+            const absenceRecords = storage.getPresenceRecords();
+
+            // Filter records for current month
+            const [year, month] = currentPresenceMonth.split('-').map(Number);
+            const monthRecords = absenceRecords.filter(record => {
+                const recordDate = new Date(record.startDate);
+                const recordYear = recordDate.getFullYear();
+                const recordMonth = recordDate.getMonth() + 1;
+                return recordYear === year && recordMonth === month;
+            });
+
+            // Update absence count
+            const countElement = document.getElementById('absenceCount');
+            if (countElement) {
+                countElement.textContent = monthRecords.length.toString();
+            }
+
+            // Display presence list
+            displayPresenceList(members, monthRecords);
+
+            // Display calendar
+            displayCalendar(members, monthRecords, year, month);
+        }
+
+        function displayPresenceList(members, absenceRecords) {
+            const container = document.getElementById('presenceList');
+            if (!container) return;
+
+            if (members.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">👤</div>
+                        <div class="empty-state-message">No roommates added yet</div>
+                        <a href="manage-members.html" class="btn primary-btn">Add Roommates</a>
+                    </div>
+                `;
+                return;
+            }
+
+            if (absenceRecords.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">✅</div>
+                        <div class="empty-state-message">No absences recorded for this month</div>
+                        <button class="btn primary-btn" id="markFirstAbsenceBtn">Mark First Absence</button>
+                    </div>
+                `;
+
+                // Setup mark first absence button
+                const firstBtn = document.getElementById('markFirstAbsenceBtn');
+                if (firstBtn) {
+                    firstBtn.addEventListener('click', showAddAbsenceModal);
+                }
+                return;
+            }
+
+            // Group records by member
+            const recordsByMember = {};
+            absenceRecords.forEach(record => {
+                if (!recordsByMember[record.memberId]) {
+                    recordsByMember[record.memberId] = [];
+                }
+                recordsByMember[record.memberId].push(record);
+            });
+
+            // Display presence cards
+            let html = '';
+            members.forEach(member => {
+                const memberRecords = recordsByMember[member.id] || [];
+                const isAbsent = memberRecords.length > 0;
+
+                html += `
+                    <div class="presence-card" data-member-id="${member.id}">
+                        <div class="presence-header">
+                            <div class="presence-member">
+                                <div class="member-avatar-medium" style="background-color: ${member.color || '#3B82F6'}">
+                                    ${member.avatar || member.name.charAt(0)}
+                                </div>
+                                <div class="member-name">${member.name}</div>
+                            </div>
+                            <div class="presence-status ${isAbsent ? 'absent' : 'present'}">
+                                ${isAbsent ? 'Absent' : 'Present'}
+                            </div>
+                        </div>
+                `;
+
+                if (isAbsent) {
+                    html += `<div class="absence-details">`;
+                    memberRecords.forEach(record => {
+                        const startDate = new Date(record.startDate);
+                        const endDate = record.endDate ? new Date(record.endDate) : startDate;
+
+                        const startStr = startDate.toLocaleDateString('en-IN', {
+                            day: 'numeric',
+                            month: 'short'
+                        });
+
+                        let dateRange = startStr;
+                        if (record.endDate && record.endDate !== record.startDate) {
+                            const endStr = endDate.toLocaleDateString('en-IN', {
+                                day: 'numeric',
+                                month: 'short'
+                            });
+                            dateRange = `${startStr} - ${endStr}`;
+                        }
+
+                        html += `
+                            <div class="absence-period">
+                                <span>📅 ${dateRange}</span>
+                                <span>•</span>
+                                <span>${record.reason}</span>
+                                <div style="flex: 1;"></div>
+                                <button class="icon-btn edit-absence" data-record-id="${record.id}">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                    </svg>
+                                </button>
+                                <button class="icon-btn delete-absence" data-record-id="${record.id}">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="3 6 5 6 21 6"/>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        `;
+                    });
+                    html += `</div>`;
+                }
+
+                html += `</div>`;
+            });
+
+            container.innerHTML = html;
+
+            // Add event listeners to action buttons
+            container.querySelectorAll('.edit-absence').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const recordId = this.getAttribute('data-record-id');
+                    showEditAbsenceModal(recordId);
+                });
+            });
+
+            container.querySelectorAll('.delete-absence').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const recordId = this.getAttribute('data-record-id');
+                    showDeleteAbsenceConfirmation(recordId);
+                });
+            });
+        }
+
+        function displayCalendar(members, absenceRecords, year, month) {
+            const container = document.getElementById('calendarContainer');
+            if (!container) return;
+
+            // Get first and last day of month
+            const firstDay = new Date(year, month - 1, 1);
+            const lastDay = new Date(year, month, 0);
+            const totalDays = lastDay.getDate();
+
+            // Get day of week for first day (0 = Sunday, 1 = Monday, etc.)
+            const firstDayOfWeek = firstDay.getDay();
+
+            // Month name
+            const monthNames = [
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+            const monthName = monthNames[month - 1];
+
+            // Create calendar HTML
+            let html = `
+                <div class="calendar-header">
+                    <div>Sun</div>
+                    <div>Mon</div>
+                    <div>Tue</div>
+                    <div>Wed</div>
+                    <div>Thu</div>
+                    <div>Fri</div>
+                    <div>Sat</div>
+                </div>
+                <div class="calendar-view">
+            `;
+
+            // Empty cells before first day
+            for (let i = 0; i < firstDayOfWeek; i++) {
+                html += `<div class="calendar-day"></div>`;
+            }
+
+            // Days of month
+            const today = new Date();
+            const isCurrentMonth = today.getFullYear() === year && today.getMonth() + 1 === month;
+
+            for (let day = 1; day <= totalDays; day++) {
+                const date = new Date(year, month - 1, day);
+                const dateStr = date.toISOString().split('T')[0];
+
+                // Check if any members are absent on this day
+                const absentMembers = [];
+                absenceRecords.forEach(record => {
+                    const startDate = new Date(record.startDate);
+                    const endDate = record.endDate ? new Date(record.endDate) : startDate;
+
+                    if (date >= startDate && date <= endDate) {
+                        absentMembers.push(record.memberId);
+                    }
+                });
+
+                const isToday = isCurrentMonth && day === today.getDate();
+                const isAbsentDay = absentMembers.length > 0;
+                const dayClass = isAbsentDay ? 'absent' : 'present';
+                const todayClass = isToday ? 'today' : '';
+
+                let tooltip = `Day ${day}`;
+                if (isAbsentDay) {
+                    const absentNames = absentMembers.map(memberId => {
+                        const member = members.find(m => m.id === memberId);
+                        return member ? member.name : 'Unknown';
+                    });
+                    tooltip = `${absentNames.join(', ')} ${absentNames.length > 1 ? 'are' : 'is'} absent`;
+                }
+
+                html += `
+                    <div class="calendar-day ${dayClass} ${todayClass}" 
+                         title="${tooltip}"
+                         data-date="${dateStr}">
+                        ${day}
+                    </div>
+                `;
+            }
+
+            html += `</div>`;
+            container.innerHTML = html;
+
+            // Add click event to days
+            container.querySelectorAll('.calendar-day[data-date]').forEach(day => {
+                day.addEventListener('click', function () {
+                    const date = this.getAttribute('data-date');
+                    showAddAbsenceModalForDate(date);
+                });
+            });
+        }
+
+        function showAddAbsenceModal() {
+            showAddAbsenceModalForDate(null);
+        }
+
+        function showAddAbsenceModalForDate(prefilledDate) {
+            currentAbsenceId = null;
+
+            // Reset form
+            const form = document.getElementById('absenceForm');
+            if (form) form.reset();
+
+            // Update modal title
+            const title = document.getElementById('absenceModalTitle');
+            if (title) title.textContent = 'Mark Absence';
+
+            // Populate member dropdown
+            const memberSelect = document.getElementById('absenceMember');
+            if (memberSelect) {
+                const storage = window.storage;
+                const members = storage ? storage.getMembers() : [];
+
+                memberSelect.innerHTML = '<option value="">Select roommate</option>';
+                members.forEach(member => {
+                    const option = document.createElement('option');
+                    option.value = member.id;
+                    option.textContent = member.name;
+                    memberSelect.appendChild(option);
+                });
+            }
+
+            // Set dates
+            const startDateInput = document.getElementById('absenceStartDate');
+            const endDateInput = document.getElementById('absenceEndDate');
+
+            if (prefilledDate) {
+                if (startDateInput) startDateInput.value = prefilledDate;
+                if (endDateInput) endDateInput.value = prefilledDate;
+            } else {
+                const today = new Date().toISOString().split('T')[0];
+                if (startDateInput) {
+                    startDateInput.value = today;
+                    startDateInput.min = today;
+                }
+                if (endDateInput) {
+                    endDateInput.value = today;
+                    endDateInput.min = today;
+                }
+            }
+
+            // Hide custom reason container
+            const customContainer = document.getElementById('customReasonContainer');
+            if (customContainer) {
+                customContainer.style.display = 'none';
+            }
+
+            openModal('absenceModal');
+        }
+
+        function showEditAbsenceModal(recordId) {
+            const storage = window.storage;
+            if (!storage) return;
+
+            const absenceRecords = storage.getPresenceRecords();
+            const record = absenceRecords.find(r => r.id === recordId);
+            if (!record) return;
+
+            currentAbsenceId = recordId;
+
+            // Update modal title
+            const title = document.getElementById('absenceModalTitle');
+            if (title) title.textContent = 'Edit Absence';
+
+            // Populate member dropdown
+            const memberSelect = document.getElementById('absenceMember');
+            if (memberSelect) {
+                const members = storage.getMembers();
+                memberSelect.innerHTML = '<option value="">Select roommate</option>';
+                members.forEach(member => {
+                    const option = document.createElement('option');
+                    option.value = member.id;
+                    option.textContent = member.name;
+                    option.selected = member.id === record.memberId;
+                    memberSelect.appendChild(option);
+                });
+            }
+
+            // Set dates
+            document.getElementById('absenceStartDate').value = record.startDate;
+            document.getElementById('absenceEndDate').value = record.endDate || record.startDate;
+
+            // Set reason
+            const reasonSelect = document.getElementById('absenceReason');
+            const customReason = document.getElementById('customReason');
+            const customContainer = document.getElementById('customReasonContainer');
+
+            if (reasonSelect && customReason && customContainer) {
+                const isCustomReason = !['Out of station', 'Sick', 'Personal work', 'Vacation', 'Family event'].includes(record.reason);
+
+                if (isCustomReason) {
+                    reasonSelect.value = 'Other';
+                    customReason.value = record.reason;
+                    customContainer.style.display = 'block';
+                } else {
+                    reasonSelect.value = record.reason;
+                    customContainer.style.display = 'none';
+                }
+            }
+
+            openModal('absenceModal');
+        }
+
+        function showDeleteAbsenceConfirmation(recordId) {
+            const storage = window.storage;
+            if (!storage) return;
+
+            const absenceRecords = storage.getPresenceRecords();
+            const record = absenceRecords.find(r => r.id === recordId);
+            if (!record) return;
+
+            currentAbsenceId = recordId;
+
+            // Get member name
+            const members = storage.getMembers();
+            const member = members.find(m => m.id === record.memberId);
+            const memberName = member ? member.name : 'Unknown';
+
+            // Update delete message
+            const message = document.getElementById('deleteAbsenceMessage');
+            if (message) {
+                const dateStr = new Date(record.startDate).toLocaleDateString('en-IN', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric'
+                });
+                message.textContent = `Are you sure you want to delete ${memberName}'s absence record for ${dateStr}?`;
+            }
+
+            // Setup delete button
+            const deleteBtn = document.getElementById('confirmDeleteAbsenceBtn');
+            if (deleteBtn) {
+                deleteBtn.onclick = deleteAbsence;
+            }
+
+            openModal('deleteAbsenceModal');
+        }
+
+        function saveAbsence(event) {
+            if (event) event.preventDefault();
+
+            const storage = window.storage;
+            if (!storage) {
+                showToast('Storage not available', 'error');
+                return;
+            }
+
+            // Get form data
+            const memberId = document.getElementById('absenceMember').value;
+            const startDate = document.getElementById('absenceStartDate').value;
+            let endDate = document.getElementById('absenceEndDate').value;
+            const reasonSelect = document.getElementById('absenceReason').value;
+            const customReason = document.getElementById('customReason').value;
+            const applyToFuture = document.getElementById('applyToFuture').checked;
+
+            // Validate
+            if (!memberId) {
+                showToast('Please select a roommate', 'error');
+                return;
+            }
+
+            if (!startDate) {
+                showToast('Please select a start date', 'error');
+                return;
+            }
+
+            if (!endDate) {
+                endDate = startDate; // Single day absence
+            }
+
+            if (new Date(endDate) < new Date(startDate)) {
+                showToast('End date must be after start date', 'error');
+                return;
+            }
+
+            let reason = reasonSelect;
+            if (reasonSelect === 'Other') {
+                if (!customReason.trim()) {
+                    showToast('Please specify a reason', 'error');
+                    return;
+                }
+                reason = customReason.trim();
+            } else if (!reasonSelect) {
+                showToast('Please select a reason', 'error');
+                return;
+            }
+
+            const absenceData = {
+                memberId,
+                startDate,
+                endDate: endDate !== startDate ? endDate : null,
+                reason
+            };
+
+            if (currentAbsenceId) {
+                // Update existing record
+                try {
+                    storage.savePresenceRecord({
+                        ...absenceData,
+                        id: currentAbsenceId
+                    });
+
+                    showToast('Absence updated successfully', 'success');
+                } catch (error) {
+                    showToast('Failed to update absence: ' + error.message, 'error');
+                }
+            } else {
+                // Add new record
+                try {
+                    storage.savePresenceRecord(absenceData);
+
+                    // Apply to future months if requested
+                    if (applyToFuture) {
+                        applyAbsenceToFuture(absenceData);
+                    }
+
+                    showToast('Absence recorded successfully', 'success');
+                } catch (error) {
+                    showToast('Failed to record absence: ' + error.message, 'error');
+                }
+            }
+
+            closeModal('absenceModal');
+            loadPresenceData();
+        }
+
+        function applyAbsenceToFuture(absenceData) {
+            const storage = window.storage;
+            if (!storage) return;
+
+            const { startDate, endDate, memberId, reason } = absenceData;
+            const start = new Date(startDate);
+
+            // Apply to next 6 months
+            for (let i = 1; i <= 6; i++) {
+                const newStart = new Date(start);
+                newStart.setMonth(newStart.getMonth() + i);
+
+                const newEnd = endDate ? new Date(endDate) : new Date(startDate);
+                newEnd.setMonth(newEnd.getMonth() + i);
+
+                try {
+                    storage.savePresenceRecord({
+                        memberId,
+                        startDate: newStart.toISOString().split('T')[0],
+                        endDate: endDate ? newEnd.toISOString().split('T')[0] : null,
+                        reason
+                    });
+                } catch (error) {
+                    // Skip if there's an error (e.g., overlapping records)
+                    console.log(`Skipping month ${i}:`, error.message);
+                }
+            }
+        }
+
+        function deleteAbsence() {
+            const storage = window.storage;
+            if (!storage) return;
+
+            try {
+                storage.deletePresenceRecord(currentAbsenceId);
+                showToast('Absence deleted successfully', 'success');
+                closeModal('deleteAbsenceModal');
+                loadPresenceData();
+            } catch (error) {
+                showToast('Failed to delete absence: ' + error.message, 'error');
+                closeModal('deleteAbsenceModal');
+            }
+        }
+
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            const overlay = document.getElementById('modalOverlay');
+
+            if (modal && overlay) {
+                modal.style.display = 'block';
+                overlay.style.display = 'block';
+
+                // Add active class for animation
+                setTimeout(() => {
+                    modal.classList.add('active');
+                    overlay.classList.add('active');
+                }, 10);
+            }
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            const overlay = document.getElementById('modalOverlay');
+
+            if (modal) {
+                modal.classList.remove('active');
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                    // Check if any other modals are open
+                    const anyModalOpen = Array.from(document.querySelectorAll('.modal'))
+                        .some(m => m.style.display === 'block');
+                    if (!anyModalOpen && overlay) {
+                        overlay.style.display = 'none';
+                        overlay.classList.remove('active');
+                    }
+                }, 300);
+            }
+        }
+
+        function closeAllModals() {
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.classList.remove('active');
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                }, 300);
+            });
+
+            const overlay = document.getElementById('modalOverlay');
+            if (overlay) {
+                overlay.style.display = 'none';
+                overlay.classList.remove('active');
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <div class="toast-content">
+                    <div class="toast-message">${message}</div>
+                </div>
+                <button class="toast-close">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            `;
+
+            container.appendChild(toast);
+
+            // Remove after 3 seconds
+            setTimeout(() => {
+                toast.style.animation = 'toastSlideOut 0.3s ease';
+                setTimeout(() => {
+                    if (toast.parentNode === container) {
+                        container.removeChild(toast);
+                    }
+                }, 300);
+            }, 3000);
+
+            // Close button
+            const closeBtn = toast.querySelector('.toast-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    toast.style.animation = 'toastSlideOut 0.3s ease';
+                    setTimeout(() => {
+                        if (toast.parentNode === container) {
+                            container.removeChild(toast);
+                        }
+                    }, 300);
+                });
+            }
+        }
+    </script>
+</body>
+
+</html>

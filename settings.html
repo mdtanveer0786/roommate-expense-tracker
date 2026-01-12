@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Settings - Roommate Expenses</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
+    <style>
+        .settings-section {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .settings-section h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .settings-section h2 .icon {
+            font-size: 1.5rem;
+        }
+
+        .setting-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+
+        .setting-info {
+            flex: 1;
+        }
+
+        .setting-title {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+            color: var(--text-primary);
+        }
+
+        .setting-description {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .setting-control {
+            margin-left: 1rem;
+            flex-shrink: 0;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 52px;
+            height: 28px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--border-color);
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: var(--primary-600);
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(24px);
+        }
+
+        .select-control {
+            min-width: 120px;
+        }
+
+        .number-control {
+            width: 80px;
+            text-align: center;
+        }
+
+        .danger-zone {
+            border: 2px solid var(--danger-200);
+            background: var(--danger-50);
+        }
+
+        .danger-zone h2 {
+            color: var(--danger-700);
+        }
+
+        .pin-input-container {
+            display: flex;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .pin-input {
+            width: 3rem;
+            height: 3rem;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 600;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        .pin-input:focus {
+            border-color: var(--primary-600);
+            outline: none;
+        }
+
+        .pin-dots {
+            display: flex;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .pin-dot {
+            width: 1rem;
+            height: 1rem;
+            border-radius: 50%;
+            background: var(--border-color);
+        }
+
+        .pin-dot.filled {
+            background: var(--primary-600);
+        }
+
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .keypad-btn {
+            height: 3.5rem;
+            font-size: 1.25rem;
+            font-weight: 600;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .keypad-btn:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .keypad-btn:active {
+            transform: scale(0.95);
+        }
+
+        .backspace-btn {
+            grid-column: span 2;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+
+        .empty-state-message {
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-main">
+                <a href="index.html" class="icon-btn back-button">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="15 18 9 12 15 6" />
+                    </svg>
+                </a>
+                <div class="header-title">
+                    <h1>Settings</h1>
+                </div>
+                <div class="header-actions">
+                    <button class="icon-btn" id="saveSettingsBtn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                            <polyline points="17 21 17 13 7 13 7 21" />
+                            <polyline points="7 3 7 8 15 8" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- App Settings -->
+            <section class="settings-section" id="appearanceSection">
+                <h2>
+                    <span class="icon">🎨</span>
+                    <span>Appearance</span>
+                </h2>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-title">Theme</div>
+                        <div class="setting-description">Choose light or dark mode</div>
+                    </div>
+                    <div class="setting-control">
+                        <select id="themeSelect" class="form-control select-control">
+                            <option value="auto">Auto</option>
+                            <option value="light">Light</option>
+                            <option value="dark">Dark</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-title">Compact View</div>
+                        <div class="setting-description">Show more content in less space</div>
+                    </div>
+                    <div class="setting-control">
+                        <label class="switch">
+                            <input type="checkbox" id="compactViewToggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Currency & Format -->
+            <section class="settings-section" id="currencySection">
+                <h2>
+                    <span class="icon">💰</span>
+                    <span>Currency & Format</span>
+                </h2>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-title">Currency</div>
+                        <div class="setting-description">Select your currency symbol</div>
+                    </div>
+                    <div class="setting-control">
+                        <select id="currencySelect" class="form-control select-control">
+                            <option value="₹">₹ (Indian Rupee)</option>
+                            <option value="$">$ (US Dollar)</option>
+                            <option value="€">€ (Euro)</option>
+                            <option value="£">£ (British Pound)</option>
+                            <option value="¥">¥ (Japanese Yen)</option>
+                            <option value="₩">₩ (Korean Won)</option>
+                            <option value="₽">₽ (Russian Ruble)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-title">Decimal Places</div>
+                        <div class="setting-description">Number of decimal places for amounts</div>
+                    </div>
+                    <div class="setting-control">
+                        <select id="decimalPlacesSelect" class="form-control select-control">
+                            <option value="0">0</option>
+                            <option value="1">1</option>
+                            <option value="2" selected>2</option>
+                            <option value="3">3</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-title">Date Format</div>
+                        <div class="setting-description">How dates are displayed</div>
+                    </div>
+                    <div class="setting-control">
+                        <select id="dateFormatSelect" class="form-control select-control">
+                            <option value="dd/mm/yyyy">DD/MM/YYYY</option>
+                            <option value="mm/dd/yyyy">MM/DD/YYYY</option>
+                            <option value="yyyy-mm-dd">YYYY-MM-DD</option>
+                            <option value="dd mmm yyyy">DD MMM YYYY</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PIN Lock -->
+            <section class="settings-section" id="pinSection">
+                <h2>
+                    <span class="icon">🔒</span>
+                    <span>PIN Lock</span>
+                </h2>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-title">Enable PIN Lock</div>
+                        <div class="setting-description">Require PIN to access the app</div>
+                    </div>
+                    <div class="setting-control">
+                        <label class="switch">
+                            <input type="checkbox" id="pinLockToggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="pinSetupContainer" style="display: none;">
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <div class="setting-title">Set PIN</div>
+                            <div class="setting-description">Enter a 4-digit PIN</div>
+                        </div>
+                    </div>
+
+                    <div class="pin-dots" id="pinDots">
+                        <div class="pin-dot"></div>
+                        <div class="pin-dot"></div>
+                        <div class="pin-dot"></div>
+                        <div class="pin-dot"></div>
+                    </div>
+
+                    <div class="keypad">
+                        <button class="keypad-btn" data-key="1">1</button>
+                        <button class="keypad-btn" data-key="2">2</button>
+                        <button class="keypad-btn" data-key="3">3</button>
+                        <button class="keypad-btn" data-key="4">4</button>
+                        <button class="keypad-btn" data-key="5">5</button>
+                        <button class="keypad-btn" data-key="6">6</button>
+                        <button class="keypad-btn" data-key="7">7</button>
+                        <button class="keypad-btn" data-key="8">8</button>
+                        <button class="keypad-btn" data-key="9">9</button>
+                        <button class="keypad-btn" data-key="0">0</button>
+                        <button class="keypad-btn backspace-btn" id="backspaceBtn">
+                            ⌫ Backspace
+                        </button>
+                    </div>
+
+                    <div class="info-message mt-2">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="16" x2="12" y2="12" />
+                            <line x1="12" y1="8" x2="12.01" y2="8" />
+                        </svg>
+                        <span>Remember your PIN. There is no recovery option if you forget it.</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Backup & Restore -->
+            <section class="settings-section" id="backupSection">
+                <h2>
+                    <span class="icon">💾</span>
+                    <span>Backup & Restore</span>
+                </h2>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-title">Auto Backup</div>
+                        <div class="setting-description">Automatically backup data daily</div>
+                    </div>
+                    <div class="setting-control">
+                        <label class="switch">
+                            <input type="checkbox" id="autoBackupToggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-title">Backup Frequency</div>
+                        <div class="setting-description">How often to create backups</div>
+                    </div>
+                    <div class="setting-control">
+                        <select id="backupFrequencySelect" class="form-control select-control">
+                            <option value="6">Every 6 hours</option>
+                            <option value="12">Every 12 hours</option>
+                            <option value="24" selected>Every 24 hours</option>
+                            <option value="168">Weekly</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-title">Data Retention</div>
+                        <div class="setting-description">How long to keep old data</div>
+                    </div>
+                    <div class="setting-control">
+                        <select id="dataRetentionSelect" class="form-control select-control">
+                            <option value="30">30 days</option>
+                            <option value="90">90 days</option>
+                            <option value="180">6 months</option>
+                            <option value="365" selected>1 year</option>
+                            <option value="0">Forever</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="setting-actions mt-3">
+                    <button class="btn primary-btn full-width mb-2" id="exportBackupBtn">
+                        📤 Export Backup
+                    </button>
+                    <button class="btn secondary-btn full-width" id="importBackupBtn">
+                        📥 Import Backup
+                    </button>
+                </div>
+            </section>
+
+            <!-- Notifications -->
+            <section class="settings-section" id="notificationsSection">
+                <h2>
+                    <span class="icon">🔔</span>
+                    <span>Notifications</span>
+                </h2>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-title">Enable Notifications</div>
+                        <div class="setting-description">Show notifications for updates</div>
+                    </div>
+                    <div class="setting-control">
+                        <label class="switch">
+                            <input type="checkbox" id="notificationsToggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-title">Vibration</div>
+                        <div class="setting-description">Vibrate on notifications</div>
+                    </div>
+                    <div class="setting-control">
+                        <label class="switch">
+                            <input type="checkbox" id="vibrationToggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-title">Sound</div>
+                        <div class="setting-description">Play sound on notifications</div>
+                    </div>
+                    <div class="setting-control">
+                        <label class="switch">
+                            <input type="checkbox" id="soundToggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Danger Zone -->
+            <section class="settings-section danger-zone" id="dangerSection">
+                <h2>
+                    <span class="icon">⚠️</span>
+                    <span>Danger Zone</span>
+                </h2>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-title">Clear All Data</div>
+                        <div class="setting-description">Delete all expenses, members, and settings</div>
+                    </div>
+                    <div class="setting-control">
+                        <button class="btn danger-btn" id="clearAllDataBtn">
+                            Clear All
+                        </button>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-title">Reset to Default</div>
+                        <div class="setting-description">Reset all settings to default values</div>
+                    </div>
+                    <div class="setting-control">
+                        <button class="btn warning-btn" id="resetSettingsBtn">
+                            Reset
+                        </button>
+                    </div>
+                </div>
+
+                <div class="info-message mt-3">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path
+                            d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                        <line x1="12" y1="9" x2="12" y2="13" />
+                        <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                    <span>These actions cannot be undone. Make sure you have a backup.</span>
+                </div>
+            </section>
+
+            <!-- App Info -->
+            <section class="settings-section" id="infoSection">
+                <h2>
+                    <span class="icon">ℹ️</span>
+                    <span>App Information</span>
+                </h2>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-title">Version</div>
+                        <div class="setting-description">Current app version</div>
+                    </div>
+                    <div class="setting-control">
+                        <span>v1.0.0</span>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-title">Storage Used</div>
+                        <div class="setting-description">Amount of local storage used</div>
+                    </div>
+                    <div class="setting-control">
+                        <span id="storageUsed">Calculating...</span>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-title">Last Backup</div>
+                        <div class="setting-description">When data was last backed up</div>
+                    </div>
+                    <div class="setting-control">
+                        <span id="lastBackup">Never</span>
+                    </div>
+                </div>
+
+                <div class="setting-actions mt-3">
+                    <button class="btn secondary-btn full-width" id="clearCacheBtn">
+                        🗑️ Clear Cache
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <a href="index.html" class="nav-item">
+                <svg class="nav-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                    <polyline points="9 22 9 12 15 12 15 22" />
+                </svg>
+                <span class="nav-label">Home</span>
+            </a>
+            <a href="add-expense.html" class="nav-item">
+                <svg class="nav-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                <span class="nav-label">Add</span>
+            </a>
+            <a href="summary.html" class="nav-item">
+                <svg class="nav-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
+                    <path d="M22 12A10 10 0 0 0 12 2v10z" />
+                </svg>
+                <span class="nav-label">Reports</span>
+            </a>
+            <a href="settings.html" class="nav-item active">
+                <svg class="nav-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <circle cx="12" cy="12" r="3" />
+                    <path
+                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                </svg>
+                <span class="nav-label">Settings</span>
+            </a>
+        </nav>
+
+        <!-- Toast Container -->
+        <div class="toast-container" id="toastContainer"></div>
+
+        <!-- Modals -->
+        <div class="modal-overlay" id="modalOverlay" style="display: none;"></div>
+
+        <div class="modal" id="exportModal" style="display: none;">
+            <div class="modal-header">
+                <h3>Export Data</h3>
+                <button class="icon-btn close-modal" data-modal="exportModal">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <textarea id="exportDataText" readonly rows="10" class="textarea"></textarea>
+                <button class="btn primary-btn full-width" id="copyExportBtn">Copy to Clipboard</button>
+                <button class="btn secondary-btn full-width mt-2" id="downloadExportBtn">Download as File</button>
+            </div>
+        </div>
+
+        <div class="modal" id="importModal" style="display: none;">
+            <div class="modal-header">
+                <h3>Import Data</h3>
+                <button class="icon-btn close-modal" data-modal="importModal">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="importFile" class="form-label">Select backup file</label>
+                    <input type="file" id="importFile" class="form-control" accept=".json">
+                </div>
+                <div class="modal-actions">
+                    <button class="btn secondary-btn" data-modal="importModal">Cancel</button>
+                    <button class="btn primary-btn" id="confirmImportBtn">Import Data</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal" id="clearDataModal" style="display: none;">
+            <div class="modal-header">
+                <h3>Clear All Data</h3>
+                <button class="icon-btn close-modal" data-modal="clearDataModal">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="warning-message">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path
+                            d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                        <line x1="12" y1="9" x2="12" y2="13" />
+                        <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                    <p>This will delete ALL data including expenses, members, and settings. This action cannot be
+                        undone.</p>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn secondary-btn" data-modal="clearDataModal">Cancel</button>
+                    <button class="btn danger-btn" id="confirmClearBtn">Clear All Data</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal" id="resetSettingsModal" style="display: none;">
+            <div class="modal-header">
+                <h3>Reset Settings</h3>
+                <button class="icon-btn close-modal" data-modal="resetSettingsModal">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="warning-message">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path
+                            d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                        <line x1="12" y1="9" x2="12" y2="13" />
+                        <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                    <p>This will reset all settings to their default values. Your expenses and members will not be
+                        affected.</p>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn secondary-btn" data-modal="resetSettingsModal">Cancel</button>
+                    <button class="btn warning-btn" id="confirmResetBtn">Reset Settings</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal" id="clearCacheModal" style="display: none;">
+            <div class="modal-header">
+                <h3>Clear Cache</h3>
+                <button class="icon-btn close-modal" data-modal="clearCacheModal">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="info-message">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="16" x2="12" y2="12" />
+                        <line x1="12" y1="8" x2="12.01" y2="8" />
+                    </svg>
+                    <p>Clearing cache will remove temporary files and free up storage space. Your data will not be
+                        affected.</p>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn secondary-btn" data-modal="clearCacheModal">Cancel</button>
+                    <button class="btn primary-btn" id="confirmClearCacheBtn">Clear Cache</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Wait for storage.js to load
+            setTimeout(initSettingsPage, 100);
+        });
+
+        let currentPin = '';
+
+        function initSettingsPage() {
+            // Check if storage is available
+            if (typeof storage === 'undefined' || !storage) {
+                console.error('Storage module not loaded');
+                showToast('Error: Storage module not available', 'error');
+                return;
+            }
+
+            // Load settings
+            loadSettings();
+
+            // Setup storage calculation
+            calculateStorageUsed();
+
+            // Setup PIN lock toggle
+            const pinToggle = document.getElementById('pinLockToggle');
+            if (pinToggle) {
+                pinToggle.addEventListener('change', function () {
+                    const pinContainer = document.getElementById('pinSetupContainer');
+                    if (pinContainer) {
+                        pinContainer.style.display = this.checked ? 'block' : 'none';
+                        if (this.checked) {
+                            setupPinEntry();
+                        }
+                    }
+                });
+            }
+
+            // Setup save button
+            const saveBtn = document.getElementById('saveSettingsBtn');
+            if (saveBtn) {
+                saveBtn.addEventListener('click', saveSettings);
+            }
+
+            // Setup export/import buttons
+            const exportBtn = document.getElementById('exportBackupBtn');
+            const importBtn = document.getElementById('importBackupBtn');
+            if (exportBtn) exportBtn.addEventListener('click', showExportModal);
+            if (importBtn) importBtn.addEventListener('click', showImportModal);
+
+            // Setup danger zone buttons
+            const clearBtn = document.getElementById('clearAllDataBtn');
+            const resetBtn = document.getElementById('resetSettingsBtn');
+            const clearCacheBtn = document.getElementById('clearCacheBtn');
+            if (clearBtn) clearBtn.addEventListener('click', showClearDataModal);
+            if (resetBtn) resetBtn.addEventListener('click', showResetSettingsModal);
+            if (clearCacheBtn) clearCacheBtn.addEventListener('click', showClearCacheModal);
+
+            // Setup modal close buttons
+            document.querySelectorAll('.close-modal').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const modalId = this.getAttribute('data-modal');
+                    closeModal(modalId);
+                });
+            });
+
+            // Setup modal overlay
+            const overlay = document.getElementById('modalOverlay');
+            if (overlay) {
+                overlay.addEventListener('click', function () {
+                    closeAllModals();
+                });
+            }
+        }
+
+        function loadSettings() {
+            try {
+                const settings = storage.getSettings() || {};
+
+                // Theme
+                const themeSelect = document.getElementById('themeSelect');
+                if (themeSelect) {
+                    themeSelect.value = settings.theme || 'auto';
+                }
+
+                // Compact view
+                const compactToggle = document.getElementById('compactViewToggle');
+                if (compactToggle) {
+                    compactToggle.checked = settings.compactView || false;
+                }
+
+                // Currency
+                const currencySelect = document.getElementById('currencySelect');
+                if (currencySelect) {
+                    currencySelect.value = settings.currency || '₹';
+                }
+
+                // Decimal places
+                const decimalSelect = document.getElementById('decimalPlacesSelect');
+                if (decimalSelect) {
+                    decimalSelect.value = settings.decimalPlaces || 2;
+                }
+
+                // Date format
+                const dateFormatSelect = document.getElementById('dateFormatSelect');
+                if (dateFormatSelect) {
+                    dateFormatSelect.value = settings.dateFormat || 'dd/mm/yyyy';
+                }
+
+                // PIN lock
+                const pinToggle = document.getElementById('pinLockToggle');
+                if (pinToggle) {
+                    pinToggle.checked = settings.pinEnabled || false;
+                    const pinContainer = document.getElementById('pinSetupContainer');
+                    if (pinContainer) {
+                        pinContainer.style.display = pinToggle.checked ? 'block' : 'none';
+                        if (pinToggle.checked) {
+                            setupPinEntry();
+                        }
+                    }
+                }
+
+                // Auto backup
+                const autoBackupToggle = document.getElementById('autoBackupToggle');
+                if (autoBackupToggle) {
+                    autoBackupToggle.checked = settings.autoBackup || false;
+                }
+
+                // Backup frequency
+                const backupFrequencySelect = document.getElementById('backupFrequencySelect');
+                if (backupFrequencySelect) {
+                    backupFrequencySelect.value = settings.backupFrequency || 24;
+                }
+
+                // Data retention
+                const dataRetentionSelect = document.getElementById('dataRetentionSelect');
+                if (dataRetentionSelect) {
+                    dataRetentionSelect.value = settings.dataRetention || 365;
+                }
+
+                // Notifications
+                const notificationsToggle = document.getElementById('notificationsToggle');
+                if (notificationsToggle) {
+                    notificationsToggle.checked = settings.notifications || false;
+                }
+
+                // Vibration
+                const vibrationToggle = document.getElementById('vibrationToggle');
+                if (vibrationToggle) {
+                    vibrationToggle.checked = settings.vibration || false;
+                }
+
+                // Sound
+                const soundToggle = document.getElementById('soundToggle');
+                if (soundToggle) {
+                    soundToggle.checked = settings.sound || false;
+                }
+
+                // Last backup
+                const lastBackupElement = document.getElementById('lastBackup');
+                if (lastBackupElement && settings.lastBackup) {
+                    const date = new Date(settings.lastBackup);
+                    lastBackupElement.textContent = date.toLocaleDateString();
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+                showToast('Error loading settings', 'error');
+            }
+        }
+
+        function saveSettings() {
+            try {
+                // Collect settings
+                const settings = {
+                    theme: document.getElementById('themeSelect').value,
+                    compactView: document.getElementById('compactViewToggle').checked,
+                    currency: document.getElementById('currencySelect').value,
+                    decimalPlaces: parseInt(document.getElementById('decimalPlacesSelect').value),
+                    dateFormat: document.getElementById('dateFormatSelect').value,
+                    pinEnabled: document.getElementById('pinLockToggle').checked,
+                    pin: currentPin || null,
+                    autoBackup: document.getElementById('autoBackupToggle').checked,
+                    backupFrequency: parseInt(document.getElementById('backupFrequencySelect').value),
+                    dataRetention: parseInt(document.getElementById('dataRetentionSelect').value),
+                    notifications: document.getElementById('notificationsToggle').checked,
+                    vibration: document.getElementById('vibrationToggle').checked,
+                    sound: document.getElementById('soundToggle').checked,
+                    lastUpdated: new Date().toISOString()
+                };
+
+                // Save settings
+                storage.saveSettings(settings);
+
+                // Apply theme immediately
+                if (settings.theme === 'auto') {
+                    // Auto-detect based on system preference
+                    const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
+                } else {
+                    document.documentElement.setAttribute('data-theme', settings.theme);
+                }
+
+                showToast('Settings saved successfully!', 'success');
+            } catch (error) {
+                console.error('Error saving settings:', error);
+                showToast('Error saving settings', 'error');
+            }
+        }
+
+        function setupPinEntry() {
+            currentPin = '';
+            updatePinDots();
+
+            // Setup keypad
+            const keypadButtons = document.querySelectorAll('.keypad-btn[data-key]');
+            keypadButtons.forEach(btn => {
+                btn.addEventListener('click', function () {
+                    if (currentPin.length < 4) {
+                        currentPin += this.getAttribute('data-key');
+                        updatePinDots();
+
+                        if (currentPin.length === 4) {
+                            // PIN complete - validate
+                            validatePin();
+                        }
+                    }
+                });
+            });
+
+            // Setup backspace
+            const backspaceBtn = document.getElementById('backspaceBtn');
+            if (backspaceBtn) {
+                backspaceBtn.addEventListener('click', function () {
+                    if (currentPin.length > 0) {
+                        currentPin = currentPin.slice(0, -1);
+                        updatePinDots();
+                    }
+                });
+            }
+        }
+
+        function updatePinDots() {
+            const dots = document.querySelectorAll('#pinDots .pin-dot');
+            dots.forEach((dot, index) => {
+                if (index < currentPin.length) {
+                    dot.classList.add('filled');
+                } else {
+                    dot.classList.remove('filled');
+                }
+            });
+        }
+
+        function validatePin() {
+            // Simple validation - PIN must be 4 digits
+            if (currentPin.length === 4 && /^\d{4}$/.test(currentPin)) {
+                showToast('PIN set successfully!', 'success');
+                // PIN will be saved when settings are saved
+            } else {
+                showToast('PIN must be 4 digits', 'error');
+                currentPin = '';
+                updatePinDots();
+            }
+        }
+
+        function calculateStorageUsed() {
+            try {
+                // Calculate approximate storage used
+                const data = storage.exportData();
+                const size = new Blob([data]).size;
+                const sizeInKB = (size / 1024).toFixed(2);
+
+                const storageElement = document.getElementById('storageUsed');
+                if (storageElement) {
+                    storageElement.textContent = `${sizeInKB} KB`;
+                }
+            } catch (error) {
+                console.error('Error calculating storage:', error);
+            }
+        }
+
+        function showExportModal() {
+            try {
+                const exportData = storage.exportData('json');
+                const exportText = document.getElementById('exportDataText');
+                if (exportText) {
+                    exportText.value = exportData;
+                }
+
+                openModal('exportModal');
+
+                // Setup copy button
+                const copyBtn = document.getElementById('copyExportBtn');
+                if (copyBtn) {
+                    copyBtn.onclick = function () {
+                        exportText.select();
+                        document.execCommand('copy');
+                        showToast('Copied to clipboard!', 'success');
+                    };
+                }
+
+                // Setup download button
+                const downloadBtn = document.getElementById('downloadExportBtn');
+                if (downloadBtn) {
+                    downloadBtn.onclick = function () {
+                        const blob = new Blob([exportData], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `roommate-expenses-backup-${new Date().toISOString().split('T')[0]}.json`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                        showToast('Download started!', 'success');
+                    };
+                }
+            } catch (error) {
+                console.error('Error exporting data:', error);
+                showToast('Error exporting data', 'error');
+            }
+        }
+
+        function showImportModal() {
+            openModal('importModal');
+
+            // Setup import button
+            const importBtn = document.getElementById('confirmImportBtn');
+            if (importBtn) {
+                importBtn.onclick = function () {
+                    const fileInput = document.getElementById('importFile');
+                    if (!fileInput || !fileInput.files[0]) {
+                        showToast('Please select a file', 'error');
+                        return;
+                    }
+
+                    const file = fileInput.files[0];
+                    const reader = new FileReader();
+
+                    reader.onload = function (e) {
+                        try {
+                            storage.importData(e.target.result, 'json');
+                            showToast('Data imported successfully!', 'success');
+                            closeModal('importModal');
+                            loadSettings();
+                            calculateStorageUsed();
+                        } catch (error) {
+                            showToast('Import failed: ' + error.message, 'error');
+                        }
+                    };
+
+                    reader.onerror = function () {
+                        showToast('Failed to read file', 'error');
+                    };
+
+                    reader.readAsText(file);
+                };
+            }
+        }
+
+        function showClearDataModal() {
+            openModal('clearDataModal');
+
+            // Setup clear button
+            const clearBtn = document.getElementById('confirmClearBtn');
+            if (clearBtn) {
+                clearBtn.onclick = function () {
+                    try {
+                        storage.clearAllData();
+                        showToast('All data cleared', 'success');
+                        closeModal('clearDataModal');
+                        loadSettings();
+                        calculateStorageUsed();
+                    } catch (error) {
+                        showToast('Error clearing data', 'error');
+                    }
+                };
+            }
+        }
+
+        function showResetSettingsModal() {
+            openModal('resetSettingsModal');
+
+            // Setup reset button
+            const resetBtn = document.getElementById('confirmResetBtn');
+            if (resetBtn) {
+                resetBtn.onclick = function () {
+                    try {
+                        // Reset to default settings
+                        const defaultSettings = {
+                            theme: 'auto',
+                            compactView: false,
+                            currency: '₹',
+                            decimalPlaces: 2,
+                            dateFormat: 'dd/mm/yyyy',
+                            pinEnabled: false,
+                            pin: null,
+                            autoBackup: false,
+                            backupFrequency: 24,
+                            dataRetention: 365,
+                            notifications: true,
+                            vibration: true,
+                            sound: true,
+                            lastUpdated: new Date().toISOString()
+                        };
+
+                        storage.saveSettings(defaultSettings);
+                        loadSettings();
+                        showToast('Settings reset to default', 'success');
+                        closeModal('resetSettingsModal');
+                    } catch (error) {
+                        showToast('Error resetting settings', 'error');
+                    }
+                };
+            }
+        }
+
+        function showClearCacheModal() {
+            openModal('clearCacheModal');
+
+            // Setup clear cache button
+            const clearBtn = document.getElementById('confirmClearCacheBtn');
+            if (clearBtn) {
+                clearBtn.onclick = function () {
+                    try {
+                        // Clear cache by reloading without cache
+                        if ('caches' in window) {
+                            caches.keys().then(function (names) {
+                                for (let name of names)
+                                    caches.delete(name);
+                            });
+                        }
+
+                        // Clear localStorage cache (not actual data)
+                        Object.keys(localStorage).forEach(key => {
+                            if (key.startsWith('cache_') || key.startsWith('temp_')) {
+                                localStorage.removeItem(key);
+                            }
+                        });
+
+                        showToast('Cache cleared successfully!', 'success');
+                        closeModal('clearCacheModal');
+                        calculateStorageUsed();
+                    } catch (error) {
+                        showToast('Error clearing cache', 'error');
+                    }
+                };
+            }
+        }
+
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            const overlay = document.getElementById('modalOverlay');
+
+            if (modal && overlay) {
+                modal.style.display = 'block';
+                overlay.style.display = 'block';
+
+                // Add active class for animation
+                setTimeout(() => {
+                    modal.classList.add('active');
+                    overlay.classList.add('active');
+                }, 10);
+            }
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            const overlay = document.getElementById('modalOverlay');
+
+            if (modal) {
+                modal.classList.remove('active');
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                    // Check if any other modals are open
+                    const anyModalOpen = Array.from(document.querySelectorAll('.modal'))
+                        .some(m => m.style.display === 'block');
+                    if (!anyModalOpen && overlay) {
+                        overlay.style.display = 'none';
+                        overlay.classList.remove('active');
+                    }
+                }, 300);
+            }
+        }
+
+        function closeAllModals() {
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.classList.remove('active');
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                }, 300);
+            });
+
+            const overlay = document.getElementById('modalOverlay');
+            if (overlay) {
+                overlay.style.display = 'none';
+                overlay.classList.remove('active');
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <div class="toast-content">
+                    <div class="toast-message">${message}</div>
+                </div>
+                <button class="toast-close">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            `;
+
+            container.appendChild(toast);
+
+            // Remove after 3 seconds
+            setTimeout(() => {
+                toast.style.animation = 'toastSlideOut 0.3s ease';
+                setTimeout(() => {
+                    if (toast.parentNode === container) {
+                        container.removeChild(toast);
+                    }
+                }, 300);
+            }, 3000);
+
+            // Close button
+            const closeBtn = toast.querySelector('.toast-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    toast.style.animation = 'toastSlideOut 0.3s ease';
+                    setTimeout(() => {
+                        if (toast.parentNode === container) {
+                            container.removeChild(toast);
+                        }
+                    }, 300);
+                });
+            }
+        }
+    </script>
+</body>
+
+</html>

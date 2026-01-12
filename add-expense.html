@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Add Expense - Roommate Expenses</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
+    <style>
+        .split-type-content {
+            display: none;
+        }
+
+        .split-type-content.active {
+            display: block;
+        }
+
+        .member-avatar-small {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+            font-size: 0.875rem;
+        }
+
+        .category-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            border-radius: var(--radius-lg);
+            border: 2px solid var(--border-color);
+            background: var(--bg-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .category-option.active {
+            border-color: var(--primary-600);
+            background: var(--primary-50);
+        }
+
+        .category-icon {
+            font-size: 2rem;
+        }
+
+        .category-name {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .custom-split-input-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .custom-split-input-group label {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .custom-split-input-group input {
+            width: 120px;
+            text-align: right;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-main">
+                <a href="index.html" class="icon-btn back-button">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="15 18 9 12 15 6" />
+                    </svg>
+                </a>
+                <div class="header-title">
+                    <h1>Add Expense</h1>
+                </div>
+                <div class="header-actions">
+                    <button class="icon-btn" id="saveExpenseBtn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                            <polyline points="17 21 17 13 7 13 7 21" />
+                            <polyline points="7 3 7 8 15 8" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <form id="expenseForm" class="expense-form">
+                <!-- Title -->
+                <div class="form-group">
+                    <label for="expenseTitle" class="form-label">Title *</label>
+                    <input type="text" id="expenseTitle" class="form-control" placeholder="What was this for?" required
+                        maxlength="100">
+                </div>
+
+                <!-- Amount -->
+                <div class="form-group">
+                    <label for="expenseAmount" class="form-label">Amount (₹) *</label>
+                    <input type="number" id="expenseAmount" class="form-control" min="0.01" step="0.01"
+                        placeholder="0.00" required>
+                </div>
+
+                <!-- Paid By -->
+                <div class="form-group">
+                    <label class="form-label">Paid By *</label>
+                    <div class="members-grid" id="paidByContainer">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Split Between -->
+                <div class="form-group">
+                    <label class="form-label">Split Between *</label>
+                    <div class="members-list" id="splitBetweenContainer">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                    <div class="split-controls">
+                        <button type="button" class="btn secondary-btn btn-small" id="selectAllBtn">Select All</button>
+                        <button type="button" class="btn secondary-btn btn-small" id="clearAllBtn">Clear All</button>
+                    </div>
+                </div>
+
+                <!-- Split Type -->
+                <div class="form-group">
+                    <label class="form-label">Split Type *</label>
+                    <div class="split-type-selector">
+                        <button type="button" class="split-type-btn active" data-type="equal">
+                            Equal
+                        </button>
+                        <button type="button" class="split-type-btn" data-type="custom">
+                            Custom
+                        </button>
+                        <button type="button" class="split-type-btn" data-type="percentage">
+                            Percentage
+                        </button>
+                    </div>
+
+                    <!-- Equal Split (Default) -->
+                    <div id="equalSplitContent" class="split-type-content active">
+                        <div class="info-message">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="12" y1="16" x2="12" y2="12" />
+                                <line x1="12" y1="8" x2="12.01" y2="8" />
+                            </svg>
+                            <span>Amount will be divided equally among selected members</span>
+                        </div>
+                    </div>
+
+                    <!-- Custom Split -->
+                    <div id="customSplitContent" class="split-type-content">
+                        <div class="custom-split-inputs" id="customSplitInputs">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                        <div class="split-total">
+                            Total: ₹<span id="customSplitTotal">0.00</span>
+                        </div>
+                    </div>
+
+                    <!-- Percentage Split -->
+                    <div id="percentageSplitContent" class="split-type-content">
+                        <div class="percentage-split-inputs" id="percentageSplitInputs">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                        <div class="split-total">
+                            Total: <span id="percentageSplitTotal">0</span>%
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Category -->
+                <div class="form-group">
+                    <label class="form-label">Category *</label>
+                    <div class="categories-grid" id="categoriesContainer">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Date -->
+                <div class="form-group">
+                    <label for="expenseDate" class="form-label">Date *</label>
+                    <input type="date" id="expenseDate" class="form-control" required>
+                </div>
+
+                <!-- Notes -->
+                <div class="form-group">
+                    <label for="expenseNotes" class="form-label">Notes (Optional)</label>
+                    <textarea id="expenseNotes" class="form-control" rows="3" placeholder="Add any additional notes..."
+                        maxlength="500"></textarea>
+                </div>
+
+                <!-- Presence Info -->
+                <div class="form-group">
+                    <div class="info-message">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="16" x2="12" y2="12" />
+                            <line x1="12" y1="8" x2="12.01" y2="8" />
+                        </svg>
+                        <span>Absent roommates will be automatically excluded based on selected date</span>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <button type="button" class="btn secondary-btn" onclick="window.history.back()">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn primary-btn" id="submitExpenseBtn">
+                        Save Expense
+                    </button>
+                </div>
+            </form>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <a href="index.html" class="nav-item">
+                <svg class="nav-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                    <polyline points="9 22 9 12 15 12 15 22" />
+                </svg>
+                <span class="nav-label">Home</span>
+            </a>
+            <a href="add-expense.html" class="nav-item active">
+                <svg class="nav-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                <span class="nav-label">Add</span>
+            </a>
+            <a href="summary.html" class="nav-item">
+                <svg class="nav-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
+                    <path d="M22 12A10 10 0 0 0 12 2v10z" />
+                </svg>
+                <span class="nav-label">Reports</span>
+            </a>
+            <a href="settings.html" class="nav-item">
+                <svg class="nav-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <circle cx="12" cy="12" r="3" />
+                    <path
+                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                </svg>
+                <span class="nav-label">Settings</span>
+            </a>
+        </nav>
+
+        <!-- Toast Container -->
+        <div class="toast-container" id="toastContainer"></div>
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            initExpenseForm();
+        });
+
+        function initExpenseForm() {
+            // Set today's date as default
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('expenseDate').value = today;
+
+            // Load members
+            loadMembers();
+
+            // Setup categories
+            setupCategories();
+
+            // Setup split type switching
+            setupSplitType();
+
+            // Setup form submission
+            setupFormSubmission();
+
+            // Setup select all/clear all
+            setupMemberSelection();
+        }
+
+        function loadMembers() {
+            const storage = window.storage;
+            if (!storage) {
+                showToast('Storage not available', 'error');
+                return;
+            }
+
+            const members = storage.getMembers();
+            if (!members || members.length === 0) {
+                showToast('No members found. Please add members first.', 'error');
+                setTimeout(() => {
+                    window.location.href = 'manage-members.html';
+                }, 2000);
+                return;
+            }
+
+            // Populate "Paid By" options
+            const paidByContainer = document.getElementById('paidByContainer');
+            if (paidByContainer) {
+                paidByContainer.innerHTML = '';
+                members.forEach(member => {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'member-option';
+                    button.dataset.memberId = member.id;
+                    button.innerHTML = `
+                        <div class="member-avatar-small" style="background-color: ${member.color || '#3B82F6'}">
+                            ${member.avatar || member.name.charAt(0)}
+                        </div>
+                        <span>${member.name}</span>
+                    `;
+
+                    // Select first member by default
+                    if (members.indexOf(member) === 0) {
+                        button.classList.add('active');
+                    }
+
+                    button.addEventListener('click', function () {
+                        // Remove active class from all buttons
+                        paidByContainer.querySelectorAll('.member-option').forEach(btn => {
+                            btn.classList.remove('active');
+                        });
+                        // Add active class to clicked button
+                        this.classList.add('active');
+                        updateSplitInputs();
+                    });
+
+                    paidByContainer.appendChild(button);
+                });
+            }
+
+            // Populate "Split Between" options
+            const splitBetweenContainer = document.getElementById('splitBetweenContainer');
+            if (splitBetweenContainer) {
+                splitBetweenContainer.innerHTML = '';
+                members.forEach(member => {
+                    const checkbox = document.createElement('div');
+                    checkbox.className = 'checkbox-item';
+                    checkbox.innerHTML = `
+                        <input type="checkbox" 
+                               id="member_${member.id}" 
+                               value="${member.id}" 
+                               class="checkbox-input"
+                               checked>
+                        <label for="member_${member.id}" class="checkbox-label">
+                            <div class="member-avatar-small" style="background-color: ${member.color || '#3B82F6'}">
+                                ${member.avatar || member.name.charAt(0)}
+                            </div>
+                            <span>${member.name}</span>
+                        </label>
+                    `;
+
+                    splitBetweenContainer.appendChild(checkbox);
+                });
+
+                // Add change listeners to checkboxes
+                splitBetweenContainer.querySelectorAll('.checkbox-input').forEach(checkbox => {
+                    checkbox.addEventListener('change', updateSplitInputs);
+                });
+            }
+
+            // Update split inputs
+            updateSplitInputs();
+        }
+
+        function setupCategories() {
+            const categories = [
+                { id: 'food', name: 'Food', icon: '🍕' },
+                { id: 'rent', name: 'Rent', icon: '🏠' },
+                { id: 'bill', name: 'Bill', icon: '📱' },
+                { id: 'gas', name: 'Gas', icon: '🔥' },
+                { id: 'water', name: 'Drinking Water', icon: '💧' },
+                { id: 'travel', name: 'Travel', icon: '🚗' },
+                { id: 'other', name: 'Other', icon: '📦' }
+            ];
+
+            const container = document.getElementById('categoriesContainer');
+            if (!container) return;
+
+            container.innerHTML = '';
+            categories.forEach(category => {
+                const option = document.createElement('button');
+                option.type = 'button';
+                option.className = 'category-option';
+                option.dataset.categoryId = category.id;
+                option.innerHTML = `
+                    <div class="category-icon">${category.icon}</div>
+                    <div class="category-name">${category.name}</div>
+                `;
+
+                // Select first category by default
+                if (categories.indexOf(category) === 0) {
+                    option.classList.add('active');
+                }
+
+                option.addEventListener('click', function () {
+                    // Remove active class from all options
+                    container.querySelectorAll('.category-option').forEach(opt => {
+                        opt.classList.remove('active');
+                    });
+                    // Add active class to clicked option
+                    this.classList.add('active');
+                });
+
+                container.appendChild(option);
+            });
+        }
+
+        function setupSplitType() {
+            const splitTypeButtons = document.querySelectorAll('.split-type-btn');
+            const splitTypeContents = document.querySelectorAll('.split-type-content');
+
+            splitTypeButtons.forEach(button => {
+                button.addEventListener('click', function () {
+                    const type = this.dataset.type;
+
+                    // Update active button
+                    splitTypeButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+
+                    // Show corresponding content
+                    splitTypeContents.forEach(content => {
+                        content.classList.remove('active');
+                        if (content.id === `${type}SplitContent`) {
+                            content.classList.add('active');
+                        }
+                    });
+
+                    // Update inputs
+                    updateSplitInputs();
+                });
+            });
+        }
+
+        function updateSplitInputs() {
+            const storage = window.storage;
+            if (!storage) return;
+
+            const members = storage.getMembers();
+            const selectedMembers = getSelectedMembers();
+            const amount = parseFloat(document.getElementById('expenseAmount').value) || 0;
+            const splitType = document.querySelector('.split-type-btn.active').dataset.type;
+
+            // Update custom split inputs
+            const customSplitInputs = document.getElementById('customSplitInputs');
+            if (customSplitInputs) {
+                customSplitInputs.innerHTML = '';
+
+                selectedMembers.forEach(memberId => {
+                    const member = members.find(m => m.id === memberId);
+                    if (!member) return;
+
+                    const inputGroup = document.createElement('div');
+                    inputGroup.className = 'custom-split-input-group';
+                    inputGroup.innerHTML = `
+                        <label>
+                            <div class="member-avatar-small" style="background-color: ${member.color || '#3B82F6'}">
+                                ${member.avatar || member.name.charAt(0)}
+                            </div>
+                            <span>${member.name}</span>
+                        </label>
+                        <input type="number" 
+                               class="form-control custom-split-input" 
+                               data-member-id="${member.id}"
+                               min="0" 
+                               step="0.01" 
+                               placeholder="0.00"
+                               value="${(amount / selectedMembers.length).toFixed(2)}">
+                    `;
+
+                    customSplitInputs.appendChild(inputGroup);
+                });
+
+                // Add input listeners
+                customSplitInputs.querySelectorAll('.custom-split-input').forEach(input => {
+                    input.addEventListener('input', updateSplitTotals);
+                });
+            }
+
+            // Update percentage split inputs
+            const percentageSplitInputs = document.getElementById('percentageSplitInputs');
+            if (percentageSplitInputs) {
+                percentageSplitInputs.innerHTML = '';
+
+                const equalPercentage = (100 / selectedMembers.length).toFixed(1);
+
+                selectedMembers.forEach(memberId => {
+                    const member = members.find(m => m.id === memberId);
+                    if (!member) return;
+
+                    const inputGroup = document.createElement('div');
+                    inputGroup.className = 'custom-split-input-group';
+                    inputGroup.innerHTML = `
+                        <label>
+                            <div class="member-avatar-small" style="background-color: ${member.color || '#3B82F6'}">
+                                ${member.avatar || member.name.charAt(0)}
+                            </div>
+                            <span>${member.name}</span>
+                        </label>
+                        <input type="number" 
+                               class="form-control percentage-split-input" 
+                               data-member-id="${member.id}"
+                               min="0" 
+                               max="100" 
+                               step="0.1" 
+                               placeholder="0"
+                               value="${equalPercentage}">
+                        <span>%</span>
+                    `;
+
+                    percentageSplitInputs.appendChild(inputGroup);
+                });
+
+                // Add input listeners
+                percentageSplitInputs.querySelectorAll('.percentage-split-input').forEach(input => {
+                    input.addEventListener('input', updateSplitTotals);
+                });
+            }
+
+            // Update totals
+            updateSplitTotals();
+        }
+
+        function updateSplitTotals() {
+            // Update custom split total
+            const customInputs = document.querySelectorAll('.custom-split-input');
+            let customTotal = 0;
+            customInputs.forEach(input => {
+                customTotal += parseFloat(input.value) || 0;
+            });
+            document.getElementById('customSplitTotal').textContent = customTotal.toFixed(2);
+
+            // Update percentage split total
+            const percentageInputs = document.querySelectorAll('.percentage-split-input');
+            let percentageTotal = 0;
+            percentageInputs.forEach(input => {
+                percentageTotal += parseFloat(input.value) || 0;
+            });
+            document.getElementById('percentageSplitTotal').textContent = percentageTotal.toFixed(1);
+
+            // Validate totals
+            validateSplitTotals();
+        }
+
+        function validateSplitTotals() {
+            const splitType = document.querySelector('.split-type-btn.active').dataset.type;
+            const amount = parseFloat(document.getElementById('expenseAmount').value) || 0;
+
+            if (splitType === 'custom') {
+                const customTotal = parseFloat(document.getElementById('customSplitTotal').textContent) || 0;
+                const difference = Math.abs(customTotal - amount);
+                if (difference > 0.01) {
+                    showToast(`Custom splits total (₹${customTotal.toFixed(2)}) doesn't match expense amount (₹${amount.toFixed(2)})`, 'warning');
+                    return false;
+                }
+            } else if (splitType === 'percentage') {
+                const percentageTotal = parseFloat(document.getElementById('percentageSplitTotal').textContent) || 0;
+                if (Math.abs(percentageTotal - 100) > 0.1) {
+                    showToast(`Percentages total (${percentageTotal.toFixed(1)}%) should equal 100%`, 'warning');
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        function getSelectedMembers() {
+            const selected = [];
+            document.querySelectorAll('#splitBetweenContainer .checkbox-input:checked').forEach(checkbox => {
+                selected.push(checkbox.value);
+            });
+            return selected;
+        }
+
+        function setupMemberSelection() {
+            const selectAllBtn = document.getElementById('selectAllBtn');
+            const clearAllBtn = document.getElementById('clearAllBtn');
+
+            if (selectAllBtn) {
+                selectAllBtn.addEventListener('click', function () {
+                    document.querySelectorAll('#splitBetweenContainer .checkbox-input').forEach(checkbox => {
+                        checkbox.checked = true;
+                    });
+                    updateSplitInputs();
+                });
+            }
+
+            if (clearAllBtn) {
+                clearAllBtn.addEventListener('click', function () {
+                    document.querySelectorAll('#splitBetweenContainer .checkbox-input').forEach(checkbox => {
+                        checkbox.checked = false;
+                    });
+                    updateSplitInputs();
+                });
+            }
+        }
+
+        function setupFormSubmission() {
+            const form = document.getElementById('expenseForm');
+            const submitBtn = document.getElementById('submitExpenseBtn');
+            const saveBtn = document.getElementById('saveExpenseBtn');
+
+            if (!form || !submitBtn || !saveBtn) return;
+
+            function handleSubmit(event) {
+                if (event) event.preventDefault();
+
+                // Validate form
+                if (!validateForm()) {
+                    return;
+                }
+
+                // Get form data
+                const expenseData = getFormData();
+
+                // Save expense
+                saveExpense(expenseData);
+            }
+
+            form.addEventListener('submit', handleSubmit);
+            submitBtn.addEventListener('click', handleSubmit);
+            saveBtn.addEventListener('click', handleSubmit);
+
+            // Also handle Enter key in amount field
+            document.getElementById('expenseAmount').addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSubmit();
+                }
+            });
+        }
+
+        function validateForm() {
+            // Check required fields
+            const title = document.getElementById('expenseTitle').value.trim();
+            const amount = parseFloat(document.getElementById('expenseAmount').value);
+            const date = document.getElementById('expenseDate').value;
+            const selectedMembers = getSelectedMembers();
+
+            if (!title) {
+                showToast('Please enter a title', 'error');
+                document.getElementById('expenseTitle').focus();
+                return false;
+            }
+
+            if (!amount || amount <= 0) {
+                showToast('Please enter a valid amount', 'error');
+                document.getElementById('expenseAmount').focus();
+                return false;
+            }
+
+            if (!date) {
+                showToast('Please select a date', 'error');
+                document.getElementById('expenseDate').focus();
+                return false;
+            }
+
+            if (selectedMembers.length === 0) {
+                showToast('Please select at least one member to split between', 'error');
+                return false;
+            }
+
+            // Validate split totals
+            if (!validateSplitTotals()) {
+                return false;
+            }
+
+            return true;
+        }
+
+        function getFormData() {
+            const storage = window.storage;
+            const members = storage ? storage.getMembers() : [];
+
+            // Get basic data
+            const title = document.getElementById('expenseTitle').value.trim();
+            const amount = parseFloat(document.getElementById('expenseAmount').value);
+            const date = document.getElementById('expenseDate').value;
+            const notes = document.getElementById('expenseNotes').value.trim();
+
+            // Get paid by
+            const paidByBtn = document.querySelector('#paidByContainer .member-option.active');
+            const paidBy = paidByBtn ? paidByBtn.dataset.memberId : members[0]?.id;
+
+            // Get split between
+            const splitBetween = getSelectedMembers();
+
+            // Get split type and details
+            const splitType = document.querySelector('.split-type-btn.active').dataset.type;
+            let splitDetails = {};
+
+            if (splitType === 'equal') {
+                // Equal split - calculate shares
+                const share = amount / splitBetween.length;
+                splitBetween.forEach(memberId => {
+                    splitDetails[memberId] = share;
+                });
+            } else if (splitType === 'custom') {
+                // Custom split - get from inputs
+                document.querySelectorAll('.custom-split-input').forEach(input => {
+                    const memberId = input.dataset.memberId;
+                    const share = parseFloat(input.value) || 0;
+                    splitDetails[memberId] = share;
+                });
+            } else if (splitType === 'percentage') {
+                // Percentage split - calculate from percentages
+                const amount = parseFloat(document.getElementById('expenseAmount').value);
+                document.querySelectorAll('.percentage-split-input').forEach(input => {
+                    const memberId = input.dataset.memberId;
+                    const percentage = parseFloat(input.value) || 0;
+                    const share = (amount * percentage) / 100;
+                    splitDetails[memberId] = share;
+                });
+            }
+
+            // Get category
+            const categoryOption = document.querySelector('#categoriesContainer .category-option.active');
+            let category = 'Other';
+            if (categoryOption) {
+                const categoryMap = {
+                    'food': 'Food',
+                    'rent': 'Rent',
+                    'bill': 'Bill',
+                    'gas': 'Gas',
+                    'water': 'Drinking Water',
+                    'travel': 'Travel',
+                    'other': 'Other'
+                };
+                category = categoryMap[categoryOption.dataset.categoryId] || 'Other';
+            }
+
+            return {
+                title,
+                amount,
+                paidBy,
+                splitType,
+                splitBetween,
+                splitDetails,
+                category,
+                date,
+                notes,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+        }
+
+        function saveExpense(expenseData) {
+            const storage = window.storage;
+            if (!storage) {
+                showToast('Storage not available', 'error');
+                return;
+            }
+
+            try {
+                // Validate expense
+                if (!expenseData.splitBetween || expenseData.splitBetween.length === 0) {
+                    throw new Error('No members selected for split');
+                }
+
+                // Round amounts to 2 decimal places
+                Object.keys(expenseData.splitDetails).forEach(key => {
+                    expenseData.splitDetails[key] = Math.round(expenseData.splitDetails[key] * 100) / 100;
+                });
+
+                // Save expense
+                const savedExpense = storage.saveExpense(expenseData);
+
+                // Show success message
+                showToast('Expense saved successfully!', 'success');
+
+                // Redirect to dashboard after delay
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1500);
+
+            } catch (error) {
+                console.error('Error saving expense:', error);
+                showToast('Failed to save expense: ' + error.message, 'error');
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <div class="toast-content">
+                    <div class="toast-message">${message}</div>
+                </div>
+                <button class="toast-close">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            `;
+
+            container.appendChild(toast);
+
+            // Remove after 3 seconds
+            setTimeout(() => {
+                toast.style.animation = 'toastSlideOut 0.3s ease';
+                setTimeout(() => {
+                    if (toast.parentNode === container) {
+                        container.removeChild(toast);
+                    }
+                }, 300);
+            }, 3000);
+
+            // Close button
+            const closeBtn = toast.querySelector('.toast-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    toast.style.animation = 'toastSlideOut 0.3s ease';
+                    setTimeout(() => {
+                        if (toast.parentNode === container) {
+                            container.removeChild(toast);
+                        }
+                    }, 300);
+                });
+            }
+        }
+    </script>
+</body>
+
+</html>

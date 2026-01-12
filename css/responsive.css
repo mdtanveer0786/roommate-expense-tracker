@@ -1,0 +1,380 @@
+/* Responsive Design */
+
+/* Extra small devices (phones, 320px and up) */
+@media (max-width: 320px) {
+    html {
+        font-size: 14px;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .quick-actions {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .categories-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .modal {
+        width: 95%;
+    }
+}
+
+/* Small devices (landscape phones, 576px and up) */
+@media (min-width: 576px) {
+    .app-container {
+        max-width: 540px;
+        margin: 0 auto;
+    }
+
+    .main-content {
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+
+    .bottom-nav {
+        max-width: 540px;
+        margin: 0 auto;
+        left: 50%;
+        transform: translateX(-50%);
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    }
+}
+
+/* Medium devices (tablets, 768px and up) */
+@media (min-width: 768px) {
+    .app-container {
+        max-width: 720px;
+    }
+
+    .bottom-nav {
+        max-width: 720px;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .quick-actions {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .expense-form {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .side-menu {
+        width: 320px;
+    }
+}
+
+/* Large devices (desktops, 992px and up) */
+@media (min-width: 992px) {
+    .app-container {
+        max-width: 960px;
+    }
+
+    .bottom-nav {
+        max-width: 960px;
+    }
+
+    .main-content {
+        padding-left: 2rem;
+        padding-right: 2rem;
+    }
+}
+
+/* Extra large devices (large desktops, 1200px and up) */
+@media (min-width: 1200px) {
+    .app-container {
+        max-width: 1140px;
+    }
+
+    .bottom-nav {
+        max-width: 1140px;
+    }
+}
+
+/* Height-based responsive adjustments */
+@media (max-height: 600px) {
+    .main-content {
+        padding-bottom: calc(3.5rem + 1rem);
+    }
+
+    .bottom-nav {
+        padding: 0.25rem;
+    }
+
+    .nav-item {
+        padding: 0.25rem;
+    }
+
+    .nav-icon {
+        width: 1.25rem;
+        height: 1.25rem;
+        margin-bottom: 0.125rem;
+    }
+
+    .nav-label {
+        font-size: 0.625rem;
+    }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+
+    .btn,
+    .icon-btn,
+    .nav-btn,
+    .action-btn,
+    .member-option,
+    .category-option,
+    .split-type-btn,
+    .menu-item,
+    .toast-close {
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    .checkbox-input {
+        min-width: 28px;
+        min-height: 28px;
+    }
+
+    .form-control {
+        min-height: 44px;
+        font-size: 16px;
+        /* Prevents iOS zoom on focus */
+    }
+
+    select.form-control {
+        padding-right: 2rem;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 1rem;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+    }
+
+    /* Remove hover effects for touch devices */
+    .btn:hover,
+    .icon-btn:hover,
+    .nav-btn:hover,
+    .action-btn:hover,
+    .member-option:hover,
+    .category-option:hover,
+    .split-type-btn:hover,
+    .menu-item:hover,
+    .toast-close:hover {
+        transform: none;
+    }
+
+    /* Use active states instead */
+    .btn:active,
+    .icon-btn:active,
+    .nav-btn:active,
+    .action-btn:active,
+    .member-option:active,
+    .category-option:active,
+    .split-type-btn:active,
+    .menu-item:active {
+        transform: translateY(2px);
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    :root {
+        --border-color: #000000;
+        --text-secondary: #000000;
+    }
+
+    .btn,
+    .form-control,
+    .stat-card,
+    .balance-card,
+    .expense-item,
+    .settlement-item {
+        border-width: 2px;
+    }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    .toast {
+        animation: none;
+    }
+}
+
+/* Dark mode auto-detection */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme]) {
+        --bg-primary: #0f172a;
+        --bg-secondary: #1e293b;
+        --bg-tertiary: #334155;
+        --text-primary: #f1f5f9;
+        --text-secondary: #cbd5e1;
+        --text-tertiary: #94a3b8;
+        --border-color: #475569;
+        --primary-50: #1e3a8a;
+        --primary-100: #1e40af;
+        --primary-200: #1d4ed8;
+        --primary-300: #2563eb;
+        --primary-400: #3b82f6;
+        --primary-500: #60a5fa;
+        --primary-600: #93c5fd;
+        --primary-700: #bfdbfe;
+    }
+}
+
+/* Landscape orientation adjustments */
+@media (orientation: landscape) and (max-height: 500px) {
+    .app-header {
+        position: static;
+    }
+
+    .month-navigation {
+        display: none;
+    }
+
+    .main-content {
+        padding-top: 0.5rem;
+        padding-bottom: calc(3rem + 0.5rem);
+    }
+
+    .bottom-nav {
+        height: 3rem;
+    }
+
+    .nav-item {
+        flex-direction: row;
+        gap: 0.5rem;
+        padding: 0.5rem;
+    }
+
+    .nav-icon {
+        margin-bottom: 0;
+        width: 1.25rem;
+        height: 1.25rem;
+    }
+
+    .nav-label {
+        font-size: 0.75rem;
+    }
+}
+
+/* Print media query for better printing */
+@media print {
+    @page {
+        margin: 0.5in;
+        size: auto;
+    }
+
+    body {
+        font-size: 12pt;
+        line-height: 1.4;
+    }
+
+    .app-container {
+        max-width: 100%;
+        margin: 0;
+    }
+
+    .main-content {
+        padding: 0;
+    }
+
+    .section {
+        margin-bottom: 1rem;
+        break-inside: avoid;
+    }
+
+    .btn,
+    .icon-btn,
+    .nav-btn,
+    .action-btn,
+    .bottom-nav,
+    .header-actions,
+    .menu-toggle,
+    .side-menu,
+    .modal-overlay,
+    .modal,
+    .toast-container {
+        display: none !important;
+    }
+
+    a[href]:after {
+        content: " (" attr(href) ")";
+        font-size: 0.75em;
+        font-weight: normal;
+    }
+
+    /* Ensure charts are visible in print */
+    .chart-container {
+        page-break-inside: avoid;
+        height: 400px !important;
+    }
+
+    /* Improve table printing */
+    .breakdown-table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    .breakdown-table th,
+    .breakdown-table td {
+        border: 1px solid #000;
+        padding: 0.5rem;
+    }
+
+    .breakdown-table th {
+        background-color: #f0f0f0 !important;
+        color: #000 !important;
+    }
+}
+
+/* Foldable devices support */
+@media (spanning: single-fold-vertical) {
+    .app-container {
+        max-width: calc(100vw - env(fold-left) - env(fold-right));
+        margin: 0 auto;
+    }
+}
+
+/* iOS specific fixes */
+@supports (-webkit-touch-callout: none) {
+    .bottom-nav {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .main-content {
+        padding-bottom: calc(4rem + 1rem + env(safe-area-inset-bottom));
+    }
+}
+
+/* Android specific fixes */
+@supports (padding: max(0px)) {
+    .bottom-nav {
+        padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+    }
+
+    .main-content {
+        padding-bottom: calc(4rem + 1rem + max(0.5rem, env(safe-area-inset-bottom)));
+    }
+}

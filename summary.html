@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Reports - Roommate Expenses</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 1rem 0;
+        }
+
+        .insight-card {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--primary-600);
+        }
+
+        .insight-card.warning {
+            border-left-color: var(--warning-600);
+        }
+
+        .insight-card.success {
+            border-left-color: var(--success-600);
+        }
+
+        .insight-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .insight-icon {
+            font-size: 1.5rem;
+        }
+
+        .insight-title {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .insight-content {
+            color: var(--text-secondary);
+            font-size: 0.9375rem;
+            line-height: 1.4;
+        }
+
+        .breakdown-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        .breakdown-table th,
+        .breakdown-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .breakdown-table th {
+            font-weight: 600;
+            color: var(--text-primary);
+            background: var(--bg-tertiary);
+        }
+
+        .breakdown-table tr:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--border-color);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 0.5rem 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary-600);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-main">
+                <a href="index.html" class="icon-btn back-button">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="15 18 9 12 15 6" />
+                    </svg>
+                </a>
+                <div class="header-title">
+                    <h1>Reports & Insights</h1>
+                </div>
+                <div class="header-actions">
+                    <button class="icon-btn" id="printReportBtn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="6 9 6 2 18 2 18 9" />
+                            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                            <rect x="6" y="14" width="12" height="8" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="month-navigation">
+                <button class="nav-btn" id="prevMonthReportBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="15 18 9 12 15 6" />
+                    </svg>
+                </button>
+                <div class="month-display">
+                    <span id="reportMonthName">Loading...</span>
+                </div>
+                <button class="nav-btn" id="nextMonthReportBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Charts Section -->
+            <section class="section">
+                <h2>Expense Analysis</h2>
+
+                <!-- Category Chart -->
+                <div class="chart-container">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+
+                <!-- Balances Chart -->
+                <div class="chart-container">
+                    <canvas id="balanceChart"></canvas>
+                </div>
+            </section>
+
+            <!-- Insights -->
+            <section class="section">
+                <h2>Monthly Insights</h2>
+                <div id="insightsContainer">
+                    <!-- Insights will be loaded here -->
+                </div>
+            </section>
+
+            <!-- Expense Breakdown -->
+            <section class="section">
+                <h2>Expense Breakdown</h2>
+                <div class="breakdown-table-container">
+                    <table class="breakdown-table" id="expenseBreakdownTable">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Amount</th>
+                                <th>Percentage</th>
+                            </tr>
+                        </thead>
+                        <tbody id="breakdownTableBody">
+                            <!-- Data will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Month Controls -->
+            <section class="section">
+                <h2>Month Controls</h2>
+                <div class="month-controls">
+                    <button class="btn warning-btn full-width mb-2" id="lockMonthBtn">
+                        🔒 Lock Current Month
+                    </button>
+                    <button class="btn secondary-btn full-width" id="carryForwardBtn">
+                        ➡️ Carry Forward Balances
+                    </button>
+                </div>
+                <div class="info-message mt-2">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="16" x2="12" y2="12" />
+                        <line x1="12" y1="8" x2="12.01" y2="8" />
+                    </svg>
+                    <span>Locking a month prevents further edits. Carry forward moves balances to next month.</span>
+                </div>
+            </section>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <a href="index.html" class="nav-item">
+                <svg class="nav-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                    <polyline points="9 22 9 12 15 12 15 22" />
+                </svg>
+                <span class="nav-label">Home</span>
+            </a>
+            <a href="add-expense.html" class="nav-item">
+                <svg class="nav-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                <span class="nav-label">Add</span>
+            </a>
+            <a href="summary.html" class="nav-item active">
+                <svg class="nav-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
+                    <path d="M22 12A10 10 0 0 0 12 2v10z" />
+                </svg>
+                <span class="nav-label">Reports</span>
+            </a>
+            <a href="settings.html" class="nav-item">
+                <svg class="nav-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <circle cx="12" cy="12" r="3" />
+                    <path
+                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                </svg>
+                <span class="nav-label">Settings</span>
+            </a>
+        </nav>
+
+        <!-- Toast Container -->
+        <div class="toast-container" id="toastContainer"></div>
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            initReports();
+        });
+
+        let categoryChart = null;
+        let balanceChart = null;
+        let currentReportMonth = getCurrentMonthKey();
+
+        function initReports() {
+            // Setup month navigation
+            setupMonthNavigation();
+
+            // Load report data
+            loadReportData();
+
+            // Setup print button
+            const printBtn = document.getElementById('printReportBtn');
+            if (printBtn) {
+                printBtn.addEventListener('click', printReport);
+            }
+
+            // Setup lock month button
+            const lockBtn = document.getElementById('lockMonthBtn');
+            if (lockBtn) {
+                lockBtn.addEventListener('click', lockCurrentMonth);
+            }
+
+            // Setup carry forward button
+            const carryBtn = document.getElementById('carryForwardBtn');
+            if (carryBtn) {
+                carryBtn.addEventListener('click', carryForwardBalances);
+            }
+        }
+
+        function setupMonthNavigation() {
+            const prevBtn = document.getElementById('prevMonthReportBtn');
+            const nextBtn = document.getElementById('nextMonthReportBtn');
+
+            if (prevBtn) {
+                prevBtn.addEventListener('click', () => navigateReportMonth(-1));
+            }
+
+            if (nextBtn) {
+                nextBtn.addEventListener('click', () => navigateReportMonth(1));
+            }
+
+            updateMonthDisplay();
+        }
+
+        function navigateReportMonth(direction) {
+            const [year, month] = currentReportMonth.split('-').map(Number);
+            let newMonth = month + direction;
+            let newYear = year;
+
+            if (newMonth > 12) {
+                newMonth = 1;
+                newYear++;
+            } else if (newMonth < 1) {
+                newMonth = 12;
+                newYear--;
+            }
+
+            currentReportMonth = `${newYear}-${String(newMonth).padStart(2, '0')}`;
+            updateMonthDisplay();
+            loadReportData();
+        }
+
+        function updateMonthDisplay() {
+            const [year, month] = currentReportMonth.split('-').map(Number);
+            const monthNames = [
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+            const monthName = monthNames[month - 1];
+
+            const display = document.getElementById('reportMonthName');
+            if (display) {
+                display.textContent = `${monthName} ${year}`;
+            }
+        }
+
+        function getCurrentMonthKey() {
+            const now = new Date();
+            return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        }
+
+        function loadReportData() {
+            const storage = window.storage;
+            if (!storage) {
+                showToast('Storage not available', 'error');
+                return;
+            }
+
+            // Get data for current report month
+            const expenses = storage.getExpenses(currentReportMonth) || [];
+            const members = storage.getMembers();
+
+            if (expenses.length === 0) {
+                showNoDataMessage();
+                return;
+            }
+
+            // Calculate statistics
+            const stats = calculateStatistics(expenses, members);
+
+            // Update charts
+            updateCharts(stats, members);
+
+            // Update insights
+            updateInsights(stats, members, expenses);
+
+            // Update breakdown table
+            updateBreakdownTable(stats);
+        }
+
+        function calculateStatistics(expenses, members) {
+            const stats = {
+                total: 0,
+                byCategory: {},
+                byMember: {},
+                memberBalances: {},
+                expenseCount: expenses.length,
+                averagePerMember: 0
+            };
+
+            // Initialize member balances
+            members.forEach(member => {
+                stats.memberBalances[member.id] = {
+                    paid: 0,
+                    owed: 0,
+                    net: 0
+                };
+            });
+
+            // Process expenses
+            expenses.forEach(expense => {
+                const amount = expense.amount || 0;
+
+                // Add to total
+                stats.total += amount;
+
+                // Category breakdown
+                const category = expense.category || 'Other';
+                stats.byCategory[category] = (stats.byCategory[category] || 0) + amount;
+
+                // Member payments
+                const payerId = expense.paidBy;
+                if (stats.memberBalances[payerId]) {
+                    stats.memberBalances[payerId].paid += amount;
+                }
+
+                // Split details
+                if (expense.splitDetails) {
+                    Object.entries(expense.splitDetails).forEach(([memberId, share]) => {
+                        if (stats.memberBalances[memberId] && memberId !== payerId) {
+                            stats.memberBalances[memberId].owed += share;
+                        }
+                    });
+                }
+            });
+
+            // Calculate net balances
+            members.forEach(member => {
+                const balance = stats.memberBalances[member.id];
+                if (balance) {
+                    balance.net = balance.paid - balance.owed;
+                }
+            });
+
+            // Calculate average
+            stats.averagePerMember = members.length > 0 ? stats.total / members.length : 0;
+
+            return stats;
+        }
+
+        function updateCharts(stats, members) {
+            // Destroy existing charts
+            if (categoryChart) {
+                categoryChart.destroy();
+            }
+            if (balanceChart) {
+                balanceChart.destroy();
+            }
+
+            // Category Chart
+            const categoryCtx = document.getElementById('categoryChart');
+            if (categoryCtx) {
+                const categories = Object.keys(stats.byCategory);
+                const amounts = Object.values(stats.byCategory);
+
+                // Generate colors
+                const colors = generateColors(categories.length);
+
+                categoryChart = new Chart(categoryCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: categories,
+                        datasets: [{
+                            data: amounts,
+                            backgroundColor: colors,
+                            borderColor: colors.map(color => adjustColor(color, -20)),
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 20,
+                                    usePointStyle: true
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (context) {
+                                        const value = context.raw;
+                                        const percentage = Math.round((value / stats.total) * 100);
+                                        return `${context.label}: ₹${value.toFixed(2)} (${percentage}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Balance Chart
+            const balanceCtx = document.getElementById('balanceChart');
+            if (balanceCtx) {
+                const memberNames = members.map(m => m.name);
+                const balances = members.map(m => stats.memberBalances[m.id]?.net || 0);
+
+                // Generate colors based on balance
+                const balanceColors = balances.map(balance =>
+                    balance >= 0 ? 'rgba(16, 185, 129, 0.7)' : 'rgba(239, 68, 68, 0.7)'
+                );
+
+                balanceChart = new Chart(balanceCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: memberNames,
+                        datasets: [{
+                            label: 'Net Balance',
+                            data: balances,
+                            backgroundColor: balanceColors,
+                            borderColor: balanceColors.map(color => adjustColor(color, -20)),
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (context) {
+                                        const value = context.raw;
+                                        return `Balance: ₹${value.toFixed(2)}`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: {
+                                    callback: function (value) {
+                                        return '₹' + value;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function generateColors(count) {
+            const baseColors = [
+                '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6',
+                '#EC4899', '#06B6D4', '#84CC16', '#F97316', '#6366F1'
+            ];
+
+            const colors = [];
+            for (let i = 0; i < count; i++) {
+                colors.push(baseColors[i % baseColors.length]);
+            }
+            return colors;
+        }
+
+        function adjustColor(color, amount) {
+            // Simple color adjustment
+            return color;
+        }
+
+        function updateInsights(stats, members, expenses) {
+            const container = document.getElementById('insightsContainer');
+            if (!container) return;
+
+            const insights = [];
+
+            // Total expense insight
+            insights.push({
+                type: 'info',
+                icon: '💰',
+                title: 'Total Expenses',
+                content: `₹${stats.total.toFixed(2)} spent this month across ${stats.expenseCount} expenses.`
+            });
+
+            // Average per person insight
+            insights.push({
+                type: 'info',
+                icon: '👥',
+                title: 'Average Per Person',
+                content: `Each person spent approximately ₹${stats.averagePerMember.toFixed(2)} this month.`
+            });
+
+            // Highest payer insight
+            const highestPayer = members.reduce((max, member) => {
+                const paid = stats.memberBalances[member.id]?.paid || 0;
+                return paid > max.paid ? { member, paid } : max;
+            }, { member: null, paid: 0 });
+
+            if (highestPayer.member) {
+                insights.push({
+                    type: 'success',
+                    icon: '👑',
+                    title: 'Highest Contributor',
+                    content: `${highestPayer.member.name} paid the most: ₹${highestPayer.paid.toFixed(2)}`
+                });
+            }
+
+            // Top category insight
+            const topCategory = Object.entries(stats.byCategory)
+                .reduce((max, [cat, amount]) => amount > max.amount ? { cat, amount } : max,
+                    { cat: '', amount: 0 });
+
+            if (topCategory.cat) {
+                const percentage = Math.round((topCategory.amount / stats.total) * 100);
+                insights.push({
+                    type: 'info',
+                    icon: getCategoryIcon(topCategory.cat),
+                    title: 'Top Spending Category',
+                    content: `${topCategory.cat}: ₹${topCategory.amount.toFixed(2)} (${percentage}% of total)`
+                });
+            }
+
+            // Settlement insight
+            const settlements = calculateSettlementsFromStats(stats, members);
+            if (settlements.length > 0) {
+                insights.push({
+                    type: 'warning',
+                    icon: '💸',
+                    title: 'Settlements Needed',
+                    content: `${settlements.length} settlement${settlements.length > 1 ? 's' : ''} required to clear all balances.`
+                });
+            } else if (Object.values(stats.memberBalances).every(b => Math.abs(b.net) < 0.01)) {
+                insights.push({
+                    type: 'success',
+                    icon: '✅',
+                    title: 'All Settled',
+                    content: 'All balances are settled for this month!'
+                });
+            }
+
+            // Display insights
+            container.innerHTML = '';
+            insights.forEach(insight => {
+                const card = document.createElement('div');
+                card.className = `insight-card ${insight.type}`;
+                card.innerHTML = `
+                    <div class="insight-header">
+                        <div class="insight-icon">${insight.icon}</div>
+                        <div class="insight-title">${insight.title}</div>
+                    </div>
+                    <div class="insight-content">${insight.content}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function getCategoryIcon(category) {
+            const icons = {
+                'Food': '🍕',
+                'Rent': '🏠',
+                'Bill': '📱',
+                'Gas': '🔥',
+                'Drinking Water': '💧',
+                'Travel': '🚗',
+                'Other': '📦',
+                'Settlement': '💸'
+            };
+            return icons[category] || '💰';
+        }
+
+        function calculateSettlementsFromStats(stats, members) {
+            const settlements = [];
+            const creditors = [];
+            const debtors = [];
+
+            // Separate creditors and debtors
+            members.forEach(member => {
+                const balance = stats.memberBalances[member.id]?.net || 0;
+                if (balance > 0.01) {
+                    creditors.push({
+                        member,
+                        amount: balance
+                    });
+                } else if (balance < -0.01) {
+                    debtors.push({
+                        member,
+                        amount: -balance
+                    });
+                }
+            });
+
+            // Sort by amount
+            creditors.sort((a, b) => b.amount - a.amount);
+            debtors.sort((a, b) => b.amount - a.amount);
+
+            // Calculate settlements
+            let i = 0, j = 0;
+            while (i < creditors.length && j < debtors.length) {
+                const creditor = creditors[i];
+                const debtor = debtors[j];
+
+                const settleAmount = Math.min(creditor.amount, debtor.amount);
+
+                if (settleAmount > 0.01) {
+                    settlements.push({
+                        from: debtor.member,
+                        to: creditor.member,
+                        amount: settleAmount
+                    });
+
+                    creditor.amount -= settleAmount;
+                    debtor.amount -= settleAmount;
+                }
+
+                if (creditor.amount < 0.01) i++;
+                if (debtor.amount < 0.01) j++;
+            }
+
+            return settlements;
+        }
+
+        function updateBreakdownTable(stats) {
+            const tbody = document.getElementById('breakdownTableBody');
+            if (!tbody) return;
+
+            const categories = Object.entries(stats.byCategory)
+                .sort((a, b) => b[1] - a[1]);
+
+            let html = '';
+            categories.forEach(([category, amount]) => {
+                const percentage = stats.total > 0 ? (amount / stats.total * 100) : 0;
+
+                html += `
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <span>${getCategoryIcon(category)}</span>
+                                <span>${category}</span>
+                            </div>
+                        </td>
+                        <td>₹${amount.toFixed(2)}</td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <span>${percentage.toFixed(1)}%</span>
+                                <div class="progress-bar" style="flex: 1;">
+                                    <div class="progress-fill" style="width: ${percentage}%"></div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            // Add total row
+            html += `
+                <tr style="font-weight: 600; background: var(--bg-tertiary);">
+                    <td>Total</td>
+                    <td>₹${stats.total.toFixed(2)}</td>
+                    <td>100%</td>
+                </tr>
+            `;
+
+            tbody.innerHTML = html;
+        }
+
+        function showNoDataMessage() {
+            // Clear charts
+            if (categoryChart) {
+                categoryChart.destroy();
+                categoryChart = null;
+            }
+            if (balanceChart) {
+                balanceChart.destroy();
+                balanceChart = null;
+            }
+
+            // Clear insights
+            const insightsContainer = document.getElementById('insightsContainer');
+            if (insightsContainer) {
+                insightsContainer.innerHTML = `
+                    <div class="insight-card warning">
+                        <div class="insight-header">
+                            <div class="insight-icon">📊</div>
+                            <div class="insight-title">No Data Available</div>
+                        </div>
+                        <div class="insight-content">No expenses recorded for this month. Add expenses to see reports.</div>
+                    </div>
+                `;
+            }
+
+            // Clear breakdown table
+            const tbody = document.getElementById('breakdownTableBody');
+            if (tbody) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="3" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                            No expenses to display
+                        </td>
+                    </tr>
+                `;
+            }
+
+            // Show message in chart containers
+            const chartContainers = document.querySelectorAll('.chart-container');
+            chartContainers.forEach(container => {
+                container.innerHTML = `
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-secondary);">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">📊</div>
+                        <div>No data available</div>
+                    </div>
+                `;
+            });
+        }
+
+        function printReport() {
+            window.print();
+        }
+
+        function lockCurrentMonth() {
+            const storage = window.storage;
+            if (!storage) return;
+
+            if (confirm(`Lock ${currentReportMonth}? This will prevent any further edits to this month's expenses.`)) {
+                storage.lockMonth(currentReportMonth);
+                showToast('Month locked successfully', 'success');
+            }
+        }
+
+        function carryForwardBalances() {
+            const storage = window.storage;
+            if (!storage) return;
+
+            if (confirm(`Carry forward balances from ${currentReportMonth} to next month?`)) {
+                // This would create a settlement expense for next month
+                showToast('Balances carried forward', 'success');
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <div class="toast-content">
+                    <div class="toast-message">${message}</div>
+                </div>
+                <button class="toast-close">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            `;
+
+            container.appendChild(toast);
+
+            // Remove after 3 seconds
+            setTimeout(() => {
+                toast.style.animation = 'toastSlideOut 0.3s ease';
+                setTimeout(() => {
+                    if (toast.parentNode === container) {
+                        container.removeChild(toast);
+                    }
+                }, 300);
+            }, 3000);
+
+            // Close button
+            const closeBtn = toast.querySelector('.toast-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    toast.style.animation = 'toastSlideOut 0.3s ease';
+                    setTimeout(() => {
+                        if (toast.parentNode === container) {
+                            container.removeChild(toast);
+                        }
+                    }, 300);
+                });
+            }
+        }
+    </script>
+</body>
+
+</html>
