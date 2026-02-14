@@ -6,26 +6,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="description" content="Expense Reports and Analytics - Roommate Expense Tracker">
     <title>Reports - Roommate Expenses</title>
+
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/responsive.css">
     <link rel="manifest" href="manifest.json">
     <link rel="icon"
-        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
+
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+
     <style>
         .chart-container {
             position: relative;
             height: 300px;
-            margin: 1rem 0;
+            margin: 1.5rem 0;
+            padding: var(--spacing-lg);
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-sm);
         }
 
         .insight-card {
-            background: var(--bg-secondary);
-            border-radius: var(--radius-lg);
-            padding: 1rem;
-            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
             border-left: 4px solid var(--primary-600);
+            box-shadow: var(--shadow-sm);
+            transition: all var(--transition-base);
+        }
+
+        .insight-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
 
         .insight-card.warning {
@@ -39,60 +56,83 @@
         .insight-header {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 0.5rem;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
         }
 
         .insight-icon {
-            font-size: 1.5rem;
+            font-size: 1.75rem;
         }
 
         .insight-title {
-            font-weight: 600;
-            font-size: 1rem;
+            font-weight: var(--font-weight-semibold);
+            font-size: var(--font-size-lg);
+            margin: 0;
         }
 
         .insight-content {
             color: var(--text-secondary);
-            font-size: 0.9375rem;
-            line-height: 1.4;
+            font-size: var(--font-size-sm);
+            line-height: 1.6;
         }
 
         .breakdown-table {
             width: 100%;
             border-collapse: collapse;
-            margin: 1rem 0;
+            margin: var(--spacing-lg) 0;
+            background-color: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
         }
 
         .breakdown-table th,
         .breakdown-table td {
-            padding: 0.75rem;
+            padding: var(--spacing-md);
             text-align: left;
             border-bottom: 1px solid var(--border-color);
         }
 
         .breakdown-table th {
-            font-weight: 600;
+            font-weight: var(--font-weight-semibold);
             color: var(--text-primary);
             background: var(--bg-tertiary);
+            font-size: var(--font-size-sm);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
         }
 
         .breakdown-table tr:hover {
             background: var(--bg-tertiary);
         }
 
+        .breakdown-table:last-child {
+            border-bottom: none;
+        }
+
         .progress-bar {
             height: 8px;
             background: var(--border-color);
-            border-radius: 4px;
+            border-radius: var(--radius-full);
             overflow: hidden;
-            margin: 0.5rem 0;
+            margin: var(--spacing-md) 0;
         }
 
         .progress-fill {
             height: 100%;
-            background: var(--primary-600);
-            border-radius: 4px;
+            background: linear-gradient(90deg, var(--primary-600), var(--primary-500));
+            border-radius: var(--radius-full);
+            transition: width 0.5s ease;
+        }
+
+        .amount-positive {
+            color: var(--success-600);
+            font-weight: var(--font-weight-semibold);
+        }
+
+        .amount-negative {
+            color: var(--danger-600);
+            font-weight: var(--font-weight-semibold);
         }
     </style>
 </head>
@@ -245,6 +285,17 @@
         <!-- Toast Container -->
         <div class="toast-container" id="toastContainer"></div>
     </div>
+
+    <!-- JavaScript Modules -->
+    <script src="js/storage.js"></script>
+    <script src="js/members.js"></script>
+    <script src="js/presence.js"></script>
+    <script src="js/expense.js"></script>
+    <script src="js/calculate.js"></script>
+    <script src="js/settlement.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/ui.js"></script>
 
     <script src="js/storage.js"></script>
     <script>

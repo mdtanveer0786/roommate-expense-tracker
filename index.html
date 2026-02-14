@@ -6,34 +6,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Roommate Expenses</title>
+    <meta name="description" content="Roommate Expense Tracker - Split and manage shared expenses with ease">
+    <meta name="theme-color" content="#0284c7">
+
+    <title>Roommate Expenses - Smart Expense Tracker</title>
+
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/responsive.css">
     <link rel="manifest" href="manifest.json">
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
+
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+
     <style>
+        /* App Loading Screen */
         .app-loading {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: var(--bg-primary);
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            z-index: 9999;
+            z-index: 99999;
         }
 
         .loading-spinner {
             width: 40px;
             height: 40px;
             border: 3px solid var(--border-color);
-            border-top-color: var(--primary-color);
+            border-top-color: var(--primary-600);
             border-radius: 50%;
             animation: spin 1s linear infinite;
+        }
+
+        .app-loading p {
+            margin-top: 1rem;
+            color: var(--text-secondary);
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-medium);
         }
 
         @keyframes spin {
@@ -266,6 +282,13 @@
                     </svg>
                     <span>Export Data</span>
                 </button>
+                <button class="menu-item" id="exportCSVBtn">
+                    <svg class="menu-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <path d="M3 6h18M3 12h18m-9 6v.01M6 18h12" />
+                    </svg>
+                    <span>Export as CSV</span>
+                </button>
                 <button class="menu-item" id="importDataBtn">
                     <svg class="menu-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="2">
@@ -328,7 +351,7 @@
                 <textarea id="importDataText" rows="10" class="textarea"
                     placeholder="Paste your export data here..."></textarea>
                 <div class="modal-actions">
-                    <button class="btn secondary-btn" data-modal="importModal">Cancel</button>
+                    <button class="btn secondary-btn close-modal" data-modal="importModal">Cancel</button>
                     <button class="btn primary-btn" id="confirmImportBtn">Import Data</button>
                 </div>
             </div>
@@ -356,7 +379,7 @@
                         undone.</p>
                 </div>
                 <div class="modal-actions">
-                    <button class="btn secondary-btn" data-modal="clearDataModal">Cancel</button>
+                    <button class="btn secondary-btn close-modal" data-modal="clearDataModal">Cancel</button>
                     <button class="btn danger-btn" id="confirmClearBtn">Clear All Data</button>
                 </div>
             </div>
@@ -371,7 +394,9 @@
     <script src="js/calculate.js"></script>
     <script src="js/settlement.js"></script>
     <script src="js/charts.js"></script>
+    <script src="js/utils.js"></script>
     <script src="js/ui.js"></script>
+    <script src="js/pwa.js"></script>
     <script src="js/app.js"></script>
 
     <script>
@@ -450,8 +475,11 @@
             // Export buttons
             const exportBtn = document.getElementById('exportBtn');
             const exportDataBtn = document.getElementById('exportDataBtn');
+            const exportCSVBtn = document.getElementById('exportCSVBtn');
+
             if (exportBtn) exportBtn.addEventListener('click', showExportModal);
             if (exportDataBtn) exportDataBtn.addEventListener('click', showExportModal);
+            if (exportCSVBtn) exportCSVBtn.addEventListener('click', exportToCSV);
 
             // Import button
             const importDataBtn = document.getElementById('importDataBtn');
@@ -842,6 +870,30 @@
                 'Settlement': '💸'
             };
             return icons[category] || '💰';
+        }
+
+        function exportToCSV() {
+            try {
+                const storage = window.storage;
+                if (!storage || !window.Utils) return;
+
+                const expenses = Object.values(storage.getExpenses()).flat();
+
+                if (expenses.length === 0) {
+                    showToast('No expenses to export', 'info');
+                    return;
+                }
+
+                window.Utils.exportToCSV(
+                    expenses,
+                    `roommate-expenses-${new Date().toISOString().split('T')[0]}.csv`
+                );
+
+                showToast('Expenses exported as CSV', 'success');
+            } catch (error) {
+                console.error('Error exporting to CSV:', error);
+                showToast('Failed to export CSV: ' + error.message, 'error');
+            }
         }
 
         function toggleTheme() {
